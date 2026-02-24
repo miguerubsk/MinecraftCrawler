@@ -85,7 +85,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		// Login Start
 		ls := new(bytes.Buffer)
 		_ = WriteVarInt(ls, 0x00) // Ignoramos error en buffer memoria
-		ls.WriteString("GeminiCrawler") // Dummy name
+		ls.WriteString("MinecraftCrawler") // Dummy name
 		if err := writePacket(connLogin, ls.Bytes()); err != nil {
 			return detail, nil
 		}
@@ -93,7 +93,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		pLen, _ := ReadVarInt(connLogin)
 		if pLen > 0 {
 			pID, _ := ReadVarInt(connLogin)
-			if pID == 0x00 { // Disconnect en fase Login
+			if pID == 0x00 { // Desconectar en fase Login
 				reasonLen, _ := ReadVarInt(connLogin)
 				reason := make([]byte, reasonLen)
 				if _, err := io.ReadFull(connLogin, reason); err == nil {
@@ -111,7 +111,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 func sendHandshake(conn net.Conn, host string, port int, nextState int) error {
 	buf := new(bytes.Buffer)
 	_ = WriteVarInt(buf, 0x00) // Packet ID
-	_ = WriteVarInt(buf, 763)  // Protocol
+	_ = WriteVarInt(buf, 763)  // Protocolo
 	_ = WriteVarInt(buf, len(host))
 	buf.WriteString(host)
 	_ = binary.Write(buf, binary.BigEndian, uint16(port)) // Buffer en memoria no falla

@@ -5,6 +5,7 @@ import (
 	"MinecraftCrawler/internal/scanner"
 	"MinecraftCrawler/internal/protocol"
 	"MinecraftCrawler/internal/storage"
+	"log"
 	"sync"
 	"time"
 )
@@ -44,6 +45,7 @@ var scanCmd = &cobra.Command{
 					}
 					detail, err := protocol.AnalyzeServer(ip, port, 4*time.Second)
 					if err == nil {
+						log.Printf("[+] Found: %s:%d (%s) - Players: %d/%d - Whitelist: %t", detail.IP, detail.Port, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
 						resultChan <- detail
 					}
 				}
@@ -51,6 +53,7 @@ var scanCmd = &cobra.Command{
 		}
 
 		// 4. Ejecutar Masscan
+		log.Printf("[*] Starting Masscan on %s with rate %s...", ipRange, rate)
 		// Ahora bloquea hasta que termina y cerramos el canal
 		if err := scanner.Run(ipRange, rate, port, exclusions, ipChan); err != nil {
 			// En caso de error crítico en masscan, cerramos para no bloquear

@@ -31,6 +31,7 @@ func Run(ipRange string, rate string, port int, exclusions string, ipChan chan<-
 	}
 
 	cmd := exec.Command("masscan", args...)
+	cmd.Stderr = os.Stderr // Redirigir stderr para ver logs de masscan
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
