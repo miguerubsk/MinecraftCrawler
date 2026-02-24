@@ -8,7 +8,6 @@
   <p align="center">
     An ultra-high performance Minecraft server crawler written in Go.
     <br />
-    [![build](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go.yml)
     <br />
     <a href="#usage">View Demo</a>
     ·
@@ -17,6 +16,8 @@
     <a href="#issues">Request Feature</a>
   </p>
 </div>
+
+[![build](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go.yml)
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -157,4 +158,5 @@ Contributions are what make the open source community such an amazing place to l
 Distributed under the GPL-3.0 License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
 
