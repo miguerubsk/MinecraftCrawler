@@ -23,6 +23,7 @@ func Run(ipRange string, rate string, port int, exclusions string, ipChan chan<-
 		ipRange,
 		"-p", fmt.Sprintf("%d", port),
 		"--rate", rate,
+		"--exclude 255.255.255.255", // Excluir broadcast por defecto
 		"-oJ", "-", // Salida JSON a stdout
 	}
 

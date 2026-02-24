@@ -56,6 +56,7 @@ var scanCmd = &cobra.Command{
 		log.Printf("[*] Starting Masscan on %s with rate %s...", ipRange, rate)
 		// Ahora bloquea hasta que termina y cerramos el canal
 		if err := scanner.Run(ipRange, rate, port, exclusions, ipChan); err != nil {
+			log.Printf("[-] Masscan Error: %v", err)
 			// En caso de error crítico en masscan, cerramos para no bloquear
 			close(ipChan)
 			// Podríamos loguear el error fatal aquí
