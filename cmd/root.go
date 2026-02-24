@@ -5,7 +5,6 @@ import (
 	"os"
 )
 
-var cfgFile string
 var dbPath  string
 
 var rootCmd = &cobra.Command{

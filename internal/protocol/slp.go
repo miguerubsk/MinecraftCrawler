@@ -40,24 +40,28 @@ func GetServerStatus(host string, port int, timeout time.Duration) (*StatusRespo
 
 	// --- 1. Enviar PAQUETE HANDSHAKE ---
 	var buf bytes.Buffer
-	WriteVarInt(&buf, 0x00)                 // Packet ID: Handshake
-	WriteVarInt(&buf, 763)                  // Protocol Version (1.20.1 por defecto)
-	WriteVarInt(&buf, len(host))            // Host Length
+	_ = WriteVarInt(&buf, 0x00)                 // Packet ID: Handshake
+	_ = WriteVarInt(&buf, 763)                  // Protocol Version (1.20.1 por defecto)
+	_ = WriteVarInt(&buf, len(host))            // Host Length
 	buf.WriteString(host)                   // Host
-	binary.Write(&buf, binary.BigEndian, uint16(port))
-	WriteVarInt(&buf, 1)                    // Next State: 1 (Status)
+	_ = binary.Write(&buf, binary.BigEndian, uint16(port))
+	_ = WriteVarInt(&buf, 1)                    // Next State: 1 (Status)
 
 	// Paquete final: [Longitud][Datos]
 	fullPacket := new(bytes.Buffer)
-	WriteVarInt(fullPacket, buf.Len())
+	_ = WriteVarInt(fullPacket, buf.Len())
 	fullPacket.Write(buf.Bytes())
-	conn.Write(fullPacket.Bytes())
+	if _, err := conn.Write(fullPacket.Bytes()); err != nil {
+		return nil, err
+	}
 
 	// --- 2. Enviar STATUS REQUEST ---
 	statusReq := new(bytes.Buffer)
-	WriteVarInt(statusReq, 1)    // Longitud del paquete
-	WriteVarInt(statusReq, 0x00) // Packet ID: Status Request
-	conn.Write(statusReq.Bytes())
+	_ = WriteVarInt(statusReq, 1)    // Longitud del paquete
+	_ = WriteVarInt(statusReq, 0x00) // Packet ID: Status Request
+	if _, err := conn.Write(statusReq.Bytes()); err != nil {
+		return nil, err
+	}
 
 	// --- 3. LEER RESPUESTA ---
 	_, err = ReadVarInt(conn) 

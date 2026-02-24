@@ -34,8 +34,12 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	defer conn.Close()
 
 	// --- Handshake & Status Request ---
-	if err := sendHandshake(conn, ip, port, 1); err != nil { return nil, err }
-	writePacket(conn, []byte{0x00}) // Status Request
+	if err := sendHandshake(conn, ip, port, 1); err != nil {
+		return nil, err
+	}
+	if err := writePacket(conn, []byte{0x00}); err != nil { // Status Request
+		return nil, err
+	}
 
 	// Leer respuesta SLP
 	_, _ = ReadVarInt(conn) // Longitud
@@ -43,9 +47,13 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	if id == 0x00 {
 		l, _ := ReadVarInt(conn)
 		data := make([]byte, l)
-		io.ReadFull(conn, data)
+		if _, err := io.ReadFull(conn, data); err != nil {
+			return nil, err
+		}
 		var res slpResponse
-		json.Unmarshal(data, &res)
+		if err := json.Unmarshal(data, &res); err != nil {
+			return nil, err
+		}
 		
 		detail.VersionName = res.Version.Name
 		detail.Protocol = res.Version.Protocol
@@ -70,13 +78,17 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	connLogin, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
 	if err == nil {
 		defer connLogin.Close()
-		sendHandshake(connLogin, ip, port, 2) // NextState: Login
+		if err := sendHandshake(connLogin, ip, port, 2); err != nil { // NextState: Login
+			return detail, nil // Retornamos lo que tenemos hasta ahora
+		}
 		
 		// Login Start
 		ls := new(bytes.Buffer)
-		WriteVarInt(ls, 0x00)
+		_ = WriteVarInt(ls, 0x00) // Ignoramos error en buffer memoria
 		ls.WriteString("GeminiCrawler") // Dummy name
-		writePacket(connLogin, ls.Bytes())
+		if err := writePacket(connLogin, ls.Bytes()); err != nil {
+			return detail, nil
+		}
 
 		pLen, _ := ReadVarInt(connLogin)
 		if pLen > 0 {
@@ -84,9 +96,10 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 			if pID == 0x00 { // Disconnect en fase Login
 				reasonLen, _ := ReadVarInt(connLogin)
 				reason := make([]byte, reasonLen)
-				io.ReadFull(connLogin, reason)
-				if strings.Contains(strings.ToLower(string(reason)), "whitelist") {
-					detail.IsWhitelist = true
+				if _, err := io.ReadFull(connLogin, reason); err == nil {
+					if strings.Contains(strings.ToLower(string(reason)), "whitelist") {
+						detail.IsWhitelist = true
+					}
 				}
 			}
 		}
@@ -97,18 +110,18 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 
 func sendHandshake(conn net.Conn, host string, port int, nextState int) error {
 	buf := new(bytes.Buffer)
-	WriteVarInt(buf, 0x00) // Packet ID
-	WriteVarInt(buf, 763)  // Protocol
-	WriteVarInt(buf, len(host))
+	_ = WriteVarInt(buf, 0x00) // Packet ID
+	_ = WriteVarInt(buf, 763)  // Protocol
+	_ = WriteVarInt(buf, len(host))
 	buf.WriteString(host)
-	binary.Write(buf, binary.BigEndian, uint16(port))
-	WriteVarInt(buf, nextState)
+	_ = binary.Write(buf, binary.BigEndian, uint16(port)) // Buffer en memoria no falla
+	_ = WriteVarInt(buf, nextState)
 	return writePacket(conn, buf.Bytes())
 }
 
 func writePacket(conn net.Conn, data []byte) error {
 	buf := new(bytes.Buffer)
-	WriteVarInt(buf, len(data))
+	_ = WriteVarInt(buf, len(data))
 	buf.Write(data)
 	_, err := conn.Write(buf.Bytes())
 	return err

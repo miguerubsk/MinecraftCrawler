@@ -74,7 +74,7 @@ func (d *Database) SaveBatch(servers []*protocol.ServerDetail) error {
 			s.EnforcesSecureChat, s.Software, string(mods), string(plugins), s.Timestamp,
 		)
 		if err != nil {
-			tx.Rollback()
+			_ = tx.Rollback()
 			return err
 		}
 	}

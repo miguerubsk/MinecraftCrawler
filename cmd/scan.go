@@ -52,8 +52,13 @@ var scanCmd = &cobra.Command{
 
 		// 4. Ejecutar Masscan
 		// Ahora bloquea hasta que termina y cerramos el canal
-		scanner.Run(ipRange, rate, port, exclusions, ipChan)
-		close(ipChan)
+		if err := scanner.Run(ipRange, rate, port, exclusions, ipChan); err != nil {
+			// En caso de error crítico en masscan, cerramos para no bloquear
+			close(ipChan)
+			// Podríamos loguear el error fatal aquí
+		} else {
+			close(ipChan)
+		}
 
 		// 5. Esperar finalización ordenada
 		wg.Wait()

@@ -21,9 +21,11 @@ func QueryFullStat(address string, timeout time.Duration) (map[string]string, []
 	sessionId := int32(0x01010101 & 0x0F0F0F0F)
 	payload := new(bytes.Buffer)
 	payload.Write([]byte{0xFE, 0xFD, 0x09}) // Magic + Type (Handshake)
-	binary.Write(payload, binary.BigEndian, sessionId)
+	_ = binary.Write(payload, binary.BigEndian, sessionId)
 	
-	conn.Write(payload.Bytes())
+	if _, err := conn.Write(payload.Bytes()); err != nil {
+		return nil, nil, err
+	}
 	
 	resp := make([]byte, 1500)
 	n, err := conn.Read(resp)
@@ -34,16 +36,18 @@ func QueryFullStat(address string, timeout time.Duration) (map[string]string, []
 	// El token es un string numérico terminado en null
 	tokenStr := string(resp[5 : n-1])
 	var token int32
-	fmt.Sscanf(tokenStr, "%d", &token)
+	_, _ = fmt.Sscanf(tokenStr, "%d", &token) // Ignoramos error de parseo, token será 0 si falla
 
 	// 2. Full Stat Request
 	payload.Reset()
 	payload.Write([]byte{0xFE, 0xFD, 0x00}) // Type (Stat)
-	binary.Write(payload, binary.BigEndian, sessionId)
-	binary.Write(payload, binary.BigEndian, token)
+	_ = binary.Write(payload, binary.BigEndian, sessionId)
+	_ = binary.Write(payload, binary.BigEndian, token)
 	payload.Write([]byte{0x00, 0x00, 0x00, 0x00}) // Padding para Full Stat
 
-	conn.Write(payload.Bytes())
+	if _, err := conn.Write(payload.Bytes()); err != nil {
+		return nil, nil, err
+	}
 	n, err = conn.Read(resp)
 	if err != nil || n < 11 {
 		return nil, nil, err
