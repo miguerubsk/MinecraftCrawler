@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/miguerubsk/MinecraftCrawler/compare/v0.0.1...v0.1.0) (2026-02-25)
+
+
+### Features
+
+* stable release setup ([7a1a49e](https://github.com/miguerubsk/MinecraftCrawler/commit/7a1a49e1583531c25311c81c5f66cd7b04ef78b9))
+
 ## [0.0.1](https://github.com/miguerubsk/MinecraftCrawler/compare/v0.0.0...v0.0.1) (2026-02-25)
 
 
