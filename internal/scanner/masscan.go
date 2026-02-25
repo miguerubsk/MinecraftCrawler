@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"os" // Importante para os.Stderr
 	"os/exec"
 )
 
@@ -19,15 +20,21 @@ func Run(ipRange string, rate string, port int, excludeFile string, ipChan chan<
 		ipRange,
 		"-p", fmt.Sprintf("%d", port),
 		"--rate", rate,
-		"-oJ", "-", // Salida JSON por stdout
+		"-oJ", "-", 
 	}
 
-	// Si se proporciona un archivo de exclusión, lo añadimos a los argumentos
 	if excludeFile != "" {
 		args = append(args, "--excludefile", excludeFile)
+	} else if ipRange == "0.0.0.0/0" {
+		args = append(args, "--exclude", "255.255.255.255,127.0.0.0/8,0.0.0.0/8,224.0.0.0/4")
 	}
 
 	cmd := exec.Command("masscan", args...)
+	
+	// Redirigimos el stderr de masscan al stderr de nuestro programa 
+	// Esto mostrará el progreso "Rate:..., 10.00% done..." en la terminal.
+	cmd.Stderr = os.Stderr
+
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return err
@@ -38,14 +45,13 @@ func Run(ipRange string, rate string, port int, excludeFile string, ipChan chan<
 	}
 
 	go func() {
+		defer close(ipChan)
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
 			line := scanner.Bytes()
-			// Masscan a veces envía metadatos en el JSON, los saltamos
 			if len(line) < 10 || line[0] == '[' || line[0] == ']' {
 				continue
 			}
-			// Limpiamos la coma final si Masscan la envía
 			if line[len(line)-1] == ',' {
 				line = line[:len(line)-1]
 			}
@@ -58,7 +64,6 @@ func Run(ipRange string, rate string, port int, excludeFile string, ipChan chan<
 			}
 		}
 		_ = cmd.Wait()
-		close(ipChan) // Cerramos el canal cuando masscan termina
 	}()
 
 	return nil
