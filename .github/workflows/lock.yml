@@ -8,6 +8,9 @@ on:
 jobs:
   lock:
     name: 🔒 Lock closed issues and PRs
+    permissions:
+      issues: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: dessant/lock-threads@v2.0.3
