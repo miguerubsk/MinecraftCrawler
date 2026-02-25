@@ -46,28 +46,31 @@
 </details>
 
 <!-- ABOUT THE PROJECT -->
+
 ## About The Project
 
 MinecraftCrawler is a tool designed to discover, analyze, and store Minecraft server information at a massive scale. It combines the port discovery speed of `masscan` with a highly concurrent protocol analyzer (SLP) written in Go.
 
 Key Features:
-*   **Extreme Speed**: Pipeline architecture capable of processing thousands of servers per second.
-*   **Efficiency**: Optimized use of goroutines and SQLite database with WAL mode for batch writing.
-*   **Deep Analysis**: Extracts version, players, MOTD, mod list (Forge), plugins, and checks for whitelist status.
-*   **Robust CLI**: Easy-to-use command-line interface built with Cobra.
+
+- **Extreme Speed**: Pipeline architecture capable of processing thousands of servers per second.
+- **Efficiency**: Optimized use of goroutines and SQLite database with WAL mode for batch writing.
+- **Deep Analysis**: Extracts version, players, MOTD, mod list (Forge), plugins, and checks for whitelist status.
+- **Robust CLI**: Easy-to-use command-line interface built with Cobra.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ### Built With
 
-*   [![Go](https://img.shields.io/badge/Go-%2300ADD8.svg?logo=go&logoColor=white)](https://go.dev/)
-*   [![SQLite](https://img.shields.io/badge/SQLite-%2307405E.svg?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-*   [Masscan](https://github.com/robertdavidgraham/masscan)
-*   [Cobra](https://github.com/spf13/cobra)
+- [![Go](https://img.shields.io/badge/Go-%2300ADD8.svg?logo=go&logoColor=white)](https://go.dev/)
+- [![SQLite](https://img.shields.io/badge/SQLite-%2307405E.svg?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
+- [Masscan](https://github.com/robertdavidgraham/masscan)
+- [Cobra](https://github.com/spf13/cobra)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
+
 ## Getting Started
 
 To get a local copy up and running follow these simple steps.
@@ -76,13 +79,14 @@ To get a local copy up and running follow these simple steps.
 
 You need to have Go and Masscan installed on your system (Linux/Windows/Mac).
 
-*   **Masscan** (Debian/Ubuntu):
-    ```sh
-    sudo apt-get install masscan
-    ```
+- **Masscan** (Debian/Ubuntu):
 
-*   **Go** (1.20+):
-    Download it from [go.dev/dl](https://go.dev/dl/).
+  ```sh
+  sudo apt-get install masscan
+  ```
+
+- **Go** (1.20+):
+  Download it from [go.dev/dl](https://go.dev/dl/).
 
 ### Installation
 
@@ -102,6 +106,7 @@ You need to have Go and Masscan installed on your system (Linux/Windows/Mac).
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- USAGE EXAMPLES -->
+
 ## Usage
 
 The main command is `scan`. You need administrator privileges to run `masscan` (network raw sockets).
@@ -114,20 +119,21 @@ sudo ./mccrawler scan --range 1.1.0.0/16 --rate 5000 --workers 2000
 
 **Available Options:**
 
-| Flag | Shorthand | Description | Default |
-| --- | --- | --- | --- |
-| `--range` | `-r` | CIDR range to scan (e.g., 192.168.1.0/24) | `""` |
-| `--rate` | `-p` | Packets per second (Masscan) | `1000` |
-| `--port` | | Port to scan (25565 or 25575) | `25565` |
-| `--workers` | `-w` | Number of concurrent worker threads | `1000` |
-| `--exclude` | | IP exclusion file | `""` |
-| `--output` | `-o` | Output database file | `results.db` |
+| Flag        | Shorthand | Description                               | Default      |
+| ----------- | --------- | ----------------------------------------- | ------------ |
+| `--range`   | `-r`      | CIDR range to scan (e.g., 192.168.1.0/24) | `""`         |
+| `--rate`    | `-p`      | Packets per second (Masscan)              | `1000`       |
+| `--port`    |           | Port to scan (25565 or 25575)             | `25565`      |
+| `--workers` | `-w`      | Number of concurrent worker threads       | `1000`       |
+| `--exclude` |           | IP exclusion file                         | `""`         |
+| `--output`  | `-o`      | Output database file                      | `results.db` |
 
 _Check `mccrawler help` for more information._
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
+
 ## Roadmap
 
 - [x] Massive scanning with Masscan
@@ -141,6 +147,7 @@ _Check `mccrawler help` for more information._
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
+
 ## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
@@ -154,11 +161,15 @@ Contributions are what make the open source community such an amazing place to l
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- LICENSE -->
+
 ## License
 
 Distributed under the GPL-3.0 License. See `LICENSE` for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## Legal Disclaimer
 
+This tool is for educational purposes only. Unauthorized scanning of networks without permission can be illegal and unethical. Always ensure you have proper authorization before using this tool. The author is not responsible for its misuse or the consequences of scanning networks without authorization.
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
