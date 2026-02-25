@@ -19,6 +19,7 @@
 
 [![build](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go.yml)
 [![golangci-lint](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/lint.yml/badge.svg)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/lint.yml)
+[![CodeQL](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/codeql.yml)
 
 <!-- TABLE OF CONTENTS -->
 <details>
@@ -173,3 +174,4 @@ Distributed under the GPL-3.0 License. See `LICENSE` for more information.
 This tool is for educational purposes only. Unauthorized scanning of networks without permission can be illegal and unethical. Always ensure you have proper authorization before using this tool. The author is not responsible for its misuse or the consequences of scanning networks without authorization.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
