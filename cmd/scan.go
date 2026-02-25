@@ -17,6 +17,7 @@ var (
 	port       int
 	workers    int
 	verbose    bool
+	excludeFile string
 )
 
 var scanCmd = &cobra.Command{
@@ -55,7 +56,7 @@ var scanCmd = &cobra.Command{
 
 		// 4. Ejecutar Masscan
 		fmt.Printf("[*] Iniciando escaneo en %s (Puerto: %d, Workers: %d)\n", ipRange, port, workers)
-		err := scanner.Run(ipRange, rate, port, "", ipChan)
+		err := scanner.Run(ipRange, rate, port, excludeFile, ipChan)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -72,6 +73,6 @@ func init() {
 	scanCmd.Flags().IntVar(&port, "port", 25565, "Puerto objetivo")
 	scanCmd.Flags().IntVarP(&workers, "workers", "w", 1000, "Goroutines concurrentes")
 	scanCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Muestra detalles de cada servidor encontrado")
-	
+	scanCmd.Flags().StringVar(&excludeFile, "exclude", "", "Archivo de exclusiones (rangos de IP a evitar)")
 	rootCmd.AddCommand(scanCmd)
 }
