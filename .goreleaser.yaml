@@ -1,0 +1,26 @@
+version: 2
+project_name: mccrawler
+
+builds:
+  - env:
+      - CGO_ENABLED=0 # ¡Importante! Ahora podemos desactivarlo
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    main: ./main.go
+
+archives:
+  - format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: 'checksums.txt'
+
+changelog:
+  sort: asc
