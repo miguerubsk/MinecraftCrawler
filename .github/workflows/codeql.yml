@@ -1,4 +1,3 @@
----
 name: CodeQL
 
 on:
@@ -20,11 +19,35 @@ permissions:
 jobs:
   codeql:
     name: 🏭 Scanning
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
+
+      - name: Cache CodeQL database
+        uses: actions/cache@v3
+        with:
+          path: ~/.codeql_databases
+          key: ${{ runner.os }}-codeql-${{ github.sha }}
+
       - name: 🏗 Initialize CodeQL
         uses: github/codeql-action/init@v4
+        with:
+          languages: "go"
+
       - name: 🚀 Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+      - name: Notify on Failure
+        if: failure() && github.event_name == 'schedule'
+        run: |
+          echo "Scheduled CodeQL run failed on ${{ matrix.os }}"
