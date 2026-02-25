@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/spf13/cobra"
-	"MinecraftCrawler/internal/scanner"
 	"MinecraftCrawler/internal/protocol"
+	"MinecraftCrawler/internal/scanner"
 	"MinecraftCrawler/internal/storage"
+	"fmt"
+	"github.com/spf13/cobra"
 	"log"
 	"sync"
 	"time"
@@ -14,38 +15,38 @@ var (
 	ipRange    string
 	rate       string
 	port       int
-	exclusions string
 	workers    int
+	verbose    bool
 )
 
 var scanCmd = &cobra.Command{
 	Use:   "scan",
-	Short: "Inicia un escaneo completo (Masscan + Analysis)",
+	Short: "Inicia el escaneo y análisis",
 	Run: func(cmd *cobra.Command, args []string) {
-		// 1. Inicializar DB
+		// 1. Inicializar DB con buffer optimizado
 		db, _ := storage.NewDatabase(dbPath)
 		
-		// 2. Canales
 		ipChan := make(chan string, 10000)
 		resultChan := make(chan *protocol.ServerDetail, 1000)
 
-		// 3. Iniciar Storage y Workers
-		storageDone := storage.StartManager(db, resultChan, 500)
-		
+		// 2. Storage Manager (Escritura en disco optimizada)
+		// El batchSize de 500 reduce drásticamente los IOPS en disco
+		go storage.StartManager(db, resultChan, 500)
+
+		// 3. Worker Pool de Análisis
 		var wg sync.WaitGroup
 		for i := 0; i < workers; i++ {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
 				for ip := range ipChan {
-					// Si el puerto es 25575 (RCON), solo hacemos estadística básica
-					if port == 25575 {
-						// Lógica simplificada para RCON aquí
-						continue
-					}
 					detail, err := protocol.AnalyzeServer(ip, port, 4*time.Second)
 					if err == nil {
-						log.Printf("[+] Found: %s:%d (%s) - Players: %d/%d - Whitelist: %t", detail.IP, detail.Port, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
+						if verbose {
+							// Formato de log mejorado y legible
+							log.Printf("[+] %-15s | %-10s | P: %d/%d | WL: %t", 
+								detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
+						}
 						resultChan <- detail
 					}
 				}
@@ -53,29 +54,24 @@ var scanCmd = &cobra.Command{
 		}
 
 		// 4. Ejecutar Masscan
-		log.Printf("[*] Starting Masscan on %s with rate %s...", ipRange, rate)
-		// Ahora bloquea hasta que termina y cerramos el canal
-		if err := scanner.Run(ipRange, rate, port, exclusions, ipChan); err != nil {
-			log.Printf("[-] Masscan Error: %v", err)
-			// En caso de error crítico en masscan, cerramos para no bloquear
-			close(ipChan)
-			// Podríamos loguear el error fatal aquí
-		} else {
-			close(ipChan)
+		fmt.Printf("[*] Iniciando escaneo en %s (Puerto: %d, Workers: %d)\n", ipRange, port, workers)
+		err := scanner.Run(ipRange, rate, port, "", ipChan)
+		if err != nil {
+			log.Fatal(err)
 		}
 
-		// 5. Esperar finalización ordenada
 		wg.Wait()
 		close(resultChan)
-		<-storageDone
+		fmt.Println("\n[*] Escaneo finalizado. Los datos se han guardado en", dbPath)
 	},
 }
 
 func init() {
-	scanCmd.Flags().StringVarP(&ipRange, "range", "r", "", "Rango de IPs (CIDR)")
-	scanCmd.Flags().StringVarP(&rate, "rate", "p", "1000", "Ratio de Masscan (pps)")
-	scanCmd.Flags().IntVar(&port, "port", 25565, "Puerto a escanear (25565 o 25575)")
-	scanCmd.Flags().StringVar(&exclusions, "exclude", "", "Archivo de exclusiones")
-	scanCmd.Flags().IntVarP(&workers, "workers", "w", 1000, "Número de goroutines concurrentes")
+	scanCmd.Flags().StringVarP(&ipRange, "range", "r", "", "Rango CIDR (ej: 1.1.1.0/24)")
+	scanCmd.Flags().StringVarP(&rate, "rate", "p", "1000", "PPS de Masscan")
+	scanCmd.Flags().IntVar(&port, "port", 25565, "Puerto objetivo")
+	scanCmd.Flags().IntVarP(&workers, "workers", "w", 1000, "Goroutines concurrentes")
+	scanCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Muestra detalles de cada servidor encontrado")
+	
 	rootCmd.AddCommand(scanCmd)
 }

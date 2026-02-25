@@ -9,73 +9,89 @@ import (
 	"time"
 )
 
-// QueryFullStat obtiene plugins, mapa y lista de jugadores vía UDP
-func QueryFullStat(address string, timeout time.Duration) (map[string]string, []string, error) {
-	conn, err := net.DialTimeout("udp", address, timeout)
+// QueryResult contiene la información extraída vía UDP
+type QueryResult struct {
+	Software string            `json:"software"`
+	Plugins  []string          `json:"plugins"`
+	MapName  string            `json:"map_name"`
+	RawKV    map[string]string `json:"raw_kv"`
+}
+
+// GetQueryInfo realiza una consulta UDP Full Stat
+func GetQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult, error) {
+	addr := fmt.Sprintf("%s:%d", ip, port)
+	conn, err := net.DialTimeout("udp", addr, timeout)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	defer conn.Close()
 
-	// 1. Handshake de Query para obtener un Token
 	sessionId := int32(0x01010101 & 0x0F0F0F0F)
-	payload := new(bytes.Buffer)
-	payload.Write([]byte{0xFE, 0xFD, 0x09}) // Magic + Type (Handshake)
-	_ = binary.Write(payload, binary.BigEndian, sessionId)
 	
-	if _, err := conn.Write(payload.Bytes()); err != nil {
-		return nil, nil, err
-	}
+	// 1. Handshake para obtener el Challenge Token
+	handshake := new(bytes.Buffer)
+	handshake.Write([]byte{0xFE, 0xFD, 0x09}) // Magic + Type
+	binary.Write(handshake, binary.BigEndian, sessionId)
 	
-	resp := make([]byte, 1500)
+	conn.Write(handshake.Bytes())
+	
+	resp := make([]byte, 2048)
 	n, err := conn.Read(resp)
 	if err != nil || n < 5 {
-		return nil, nil, err
+		return nil, fmt.Errorf("no query response")
 	}
-	
-	// El token es un string numérico terminado en null
+
+	// El token viene como string en los bytes después del byte 5
 	tokenStr := string(resp[5 : n-1])
 	var token int32
-	_, _ = fmt.Sscanf(tokenStr, "%d", &token) // Ignoramos error de parseo, token será 0 si falla
+	fmt.Sscanf(tokenStr, "%d", &token)
 
 	// 2. Full Stat Request
-	payload.Reset()
-	payload.Write([]byte{0xFE, 0xFD, 0x00}) // Type (Stat)
-	_ = binary.Write(payload, binary.BigEndian, sessionId)
-	_ = binary.Write(payload, binary.BigEndian, token)
-	payload.Write([]byte{0x00, 0x00, 0x00, 0x00}) // Padding para Full Stat
+	statReq := new(bytes.Buffer)
+	statReq.Write([]byte{0xFE, 0xFD, 0x00}) // Type: Stat
+	binary.Write(statReq, binary.BigEndian, sessionId)
+	binary.Write(statReq, binary.BigEndian, token)
+	statReq.Write([]byte{0x00, 0x00, 0x00, 0x00}) // Padding para Full Stat
 
-	if _, err := conn.Write(payload.Bytes()); err != nil {
-		return nil, nil, err
-	}
+	conn.Write(statReq.Bytes())
 	n, err = conn.Read(resp)
 	if err != nil || n < 11 {
-		return nil, nil, err
+		return nil, fmt.Errorf("stat request failed")
 	}
 
-	// 3. Parsear el lío de bytes (K-V pairs)
-	// El formato es: [Padding 11 bytes] [Key] \x00 [Value] \x00 ... \x00\x01player\x00\x00 [Players]
+	// 3. Parseo de Key-Value pairs
+	// Saltamos el header de 11 bytes
 	data := resp[11:n]
-	parts := bytes.Split(data, []byte{0x00, 0x01, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x00, 0x00})
 	
-	kvSection := parts[0]
+	// El formato es [Key]\x00[Value]\x00... terminando en \x00\x00
+	kvData := bytes.Split(data, []byte{0x00, 0x01, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x00, 0x00})
+	
 	kvPairs := make(map[string]string)
-	kvSplit := bytes.Split(kvSection, []byte{0x00})
-	for i := 0; i < len(kvSplit)-1; i += 2 {
-		key := string(kvSplit[i])
+	parts := bytes.Split(kvData[0], []byte{0x00})
+	for i := 0; i < len(parts)-1; i += 2 {
+		key := string(parts[i])
 		if key == "" { break }
-		val := string(kvSplit[i+1])
+		val := string(parts[i+1])
 		kvPairs[key] = val
 	}
 
-	plugins := []string{}
+	result := &QueryResult{
+		Software: kvPairs["server_mod"],
+		MapName:  kvPairs["map"],
+		RawKV:    kvPairs,
+		Plugins:  []string{},
+	}
+
+	// El campo plugins suele venir como: "CraftBukkit on Mac OS X: WorldEdit 7.2.0; Essentials 2.18.1"
 	if p, ok := kvPairs["plugins"]; ok {
-		// Formato: "Software: Plugin1; Plugin2"
 		pParts := strings.Split(p, ":")
 		if len(pParts) > 1 {
-			plugins = strings.Split(pParts[1], ";")
+			rawPlugins := strings.Split(pParts[1], ";")
+			for _, pl := range rawPlugins {
+				result.Plugins = append(result.Plugins, strings.TrimSpace(pl))
+			}
 		}
 	}
 
-	return kvPairs, plugins, nil
+	return result, nil
 }
