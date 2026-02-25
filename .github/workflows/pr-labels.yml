@@ -7,6 +7,8 @@ on:
 jobs:
   pr_labels:
     name: 🏭 Verify
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     steps:
       - name: 🏷 Verify PR has a valid label
