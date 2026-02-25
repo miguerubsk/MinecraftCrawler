@@ -3,8 +3,10 @@ package storage
 import (
 	"MinecraftCrawler/internal/protocol"
 	"database/sql"
+	"encoding/json"
 	"log"
 	"time"
+
 	_ "modernc.org/sqlite"
 )
 
@@ -14,10 +16,11 @@ func NewDatabase(path string) (*sql.DB, error) {
 		return nil, err
 	}
 
-	_, _ = db.Exec(`
+	// Restauramos PRAGMA NORMAL para seguridad de datos y añadimos todos los campos
+	// Se añade UNIQUE(ip, port) para evitar duplicados
+	query := `
 		PRAGMA journal_mode = WAL;
-		PRAGMA synchronous = OFF;
-		PRAGMA temp_store = MEMORY;
+		PRAGMA synchronous = NORMAL;
 		CREATE TABLE IF NOT EXISTS servers (
 			ip TEXT,
 			port INTEGER,
@@ -26,44 +29,74 @@ func NewDatabase(path string) (*sql.DB, error) {
 			players_online INTEGER,
 			players_max INTEGER,
 			whitelist BOOLEAN,
-			timestamp DATETIME
-		);
-	`)
+			software TEXT,
+			mods TEXT,
+			plugins TEXT,
+			secure_chat BOOLEAN,
+			timestamp DATETIME,
+			UNIQUE(ip, port)
+		);`
+
+	if _, err := db.Exec(query); err != nil {
+		return nil, err
+	}
 	return db, nil
 }
 
-func StartManager(db *sql.DB, resultChan <-chan *protocol.ServerDetail, batchSize int) {
+// Renombramos a StartSQLiteManager para evitar colisión con buffer.go
+func StartSQLiteManager(db *sql.DB, resultChan <-chan *protocol.ServerDetail, batchSize int) {
 	buffer := make([]*protocol.ServerDetail, 0, batchSize)
 
 	for res := range resultChan {
 		buffer = append(buffer, res)
 		if len(buffer) >= batchSize {
-			flush(db, buffer)
+			if err := flush(db, buffer); err != nil {
+				log.Printf("Error flushing batch: %v", err)
+			}
 			buffer = buffer[:0]
 		}
 	}
 	if len(buffer) > 0 {
-		flush(db, buffer)
+		_ = flush(db, buffer)
 	}
 }
 
-func flush(db *sql.DB, batch []*protocol.ServerDetail) {
+func flush(db *sql.DB, batch []*protocol.ServerDetail) error {
 	tx, err := db.Begin()
 	if err != nil {
-		log.Printf("Error Tx: %v", err)
-		return
+		return err
 	}
 
-	stmt, _ := tx.Prepare(`INSERT INTO servers (ip, port, version_name, protocol, players_online, players_max, whitelist, timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
+	// Usamos INSERT OR REPLACE para actualizar datos de servidores ya conocidos
+	stmt, err := tx.Prepare(`
+		INSERT OR REPLACE INTO servers (
+			ip, port, version_name, protocol, players_online, players_max, 
+			whitelist, software, mods, plugins, secure_chat, timestamp
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
 	defer stmt.Close()
 
 	for _, s := range batch {
-		// Aseguramos que el timestamp sea actual si viene vacío
+		modsJSON, _ := json.Marshal(s.Mods)
+		pluginsJSON, _ := json.Marshal(s.Plugins)
+		
 		ts := s.Timestamp
 		if ts.IsZero() {
 			ts = time.Now()
 		}
-		_, _ = stmt.Exec(s.IP, s.Port, s.VersionName, s.Protocol, s.PlayersOnline, s.PlayersMax, s.IsWhitelist, ts)
+
+		_, err := stmt.Exec(
+			s.IP, s.Port, s.VersionName, s.Protocol, s.PlayersOnline, s.PlayersMax,
+			s.IsWhitelist, s.Software, string(modsJSON), string(pluginsJSON), 
+			s.EnforcesSecureChat, ts,
+		)
+		if err != nil {
+			log.Printf("Error inserting server %s: %v", s.IP, err)
+			continue
+		}
 	}
-	_ = tx.Commit()
+	return tx.Commit()
 }

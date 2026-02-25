@@ -32,7 +32,7 @@ var scanCmd = &cobra.Command{
 
 		// 2. Storage Manager (Escritura en disco optimizada)
 		// El batchSize de 500 reduce drásticamente los IOPS en disco
-		go storage.StartManager(db, resultChan, 500)
+		go storage.StartSQLiteManager(db, resultChan, 500)
 
 		// 3. Worker Pool de Análisis
 		var wg sync.WaitGroup
