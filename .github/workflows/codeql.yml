@@ -2,52 +2,32 @@ name: CodeQL
 
 on:
   push:
-    branches:
-      - master
-      - dev
+    branches: ["master"]
   pull_request:
-    branches:
-      - master
-      - dev
+    branches: ["master"]
   schedule:
-    - cron: "30 1 * * 0"
-
-permissions:
-  contents: read
-  security-events: write
+    - cron: '30 1 * * 0'
 
 jobs:
-  codeql:
-    name: 🏭 Scanning
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
     steps:
-      - name: Set up Go
-        if: matrix.os == 'macos-latest'
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-      - name: ⤵️ Check out code from GitHub
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache CodeQL database
-        uses: actions/cache@v3
-        with:
-          path: ~/.codeql_databases
-          key: ${{ runner.os }}-codeql-${{ github.sha }}
-
-      - name: 🏗 Initialize CodeQL
+      - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: "go"
+          languages: go
 
-      - name: 🚀 Perform CodeQL Analysis
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+
+      - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
-
-      - name: Notify on Failure
-        if: failure() && github.event_name == 'schedule'
-        run: |
-          echo "Scheduled CodeQL run failed on ${{ matrix.os }}"
