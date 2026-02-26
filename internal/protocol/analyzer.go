@@ -172,7 +172,7 @@ func GetServerStatus(host string, port int, timeout time.Duration) (*StatusRespo
 	if err != nil { return nil, err }
 	pID, _ := ReadVarInt(conn)
 	if pID != 0x00 { return nil, fmt.Errorf("id error") }
-	jLen, err := readVarIntSafe(conn)
+	jLen, err := ReadVarIntSafe(conn)
 	if err != nil { return nil, err }
 	
 	jBytes := make([]byte, jLen)
@@ -184,7 +184,7 @@ func GetServerStatus(host string, port int, timeout time.Duration) (*StatusRespo
 	return &res, nil
 }
 
-func readVarIntSafe(r io.Reader) (int, error) {
+func ReadVarIntSafe(r io.Reader) (int, error) {
 	var value int
 	var shift uint
 	for {

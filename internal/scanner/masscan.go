@@ -15,12 +15,13 @@ type MasscanResult struct {
 	} `json:"ports"`
 }
 
-func Run(ipRange string, rate string, port int, excludeFile string, ipChan chan<- string) error {
+// BuildArguments constructs the arguments for masscan
+func BuildArguments(ipRange string, rate string, port int, excludeFile string) []string {
 	args := []string{
 		ipRange,
 		"-p", fmt.Sprintf("%d", port),
 		"--rate", rate,
-		"-oJ", "-", 
+		"-oJ", "-",
 	}
 
 	if excludeFile != "" {
@@ -28,8 +29,14 @@ func Run(ipRange string, rate string, port int, excludeFile string, ipChan chan<
 	} else if ipRange == "0.0.0.0/0" {
 		args = append(args, "--exclude", "255.255.255.255,127.0.0.0/8,0.0.0.0/8,224.0.0.0/4")
 	}
+	return args
+}
+
+func Run(ipRange string, rate string, port int, excludeFile string, ipChan chan<- string) error {
+	args := BuildArguments(ipRange, rate, port, excludeFile)
 
 	cmd := exec.Command("masscan", args...)
+
 	
 	// Redirigimos el stderr de masscan al stderr de nuestro programa 
 	// Esto mostrará el progreso "Rate:..., 10.00% done..." en la terminal.

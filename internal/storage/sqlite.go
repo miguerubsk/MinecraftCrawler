@@ -50,18 +50,18 @@ func StartSQLiteManager(db *sql.DB, resultChan <-chan *protocol.ServerDetail, ba
 	for res := range resultChan {
 		buffer = append(buffer, res)
 		if len(buffer) >= batchSize {
-			if err := flush(db, buffer); err != nil {
+			if err := Flush(db, buffer); err != nil {
 				log.Printf("Error flushing batch: %v", err)
 			}
 			buffer = buffer[:0]
 		}
 	}
 	if len(buffer) > 0 {
-		_ = flush(db, buffer)
+		_ = Flush(db, buffer)
 	}
 }
 
-func flush(db *sql.DB, batch []*protocol.ServerDetail) error {
+func Flush(db *sql.DB, batch []*protocol.ServerDetail) error {
 	tx, err := db.Begin()
 	if err != nil {
 		return err
