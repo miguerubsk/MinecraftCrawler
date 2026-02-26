@@ -24,10 +24,12 @@ var (
 	excludeFile string
 )
 
-var scanCmd = &cobra.Command{
+var ScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Inicia el escaneo y análisis",
 	Run: func(cmd *cobra.Command, args []string) {
+
+
 		// 1. Configurar Logger dual (Archivo + Consola)
 		logFile, err := os.OpenFile("crawler.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
@@ -99,11 +101,13 @@ var scanCmd = &cobra.Command{
 }
 
 func init() {
-	scanCmd.Flags().StringVarP(&ipRange, "range", "r", "", "Rango CIDR (ej: 1.1.1.0/24)")
-	scanCmd.Flags().StringVarP(&rate, "rate", "p", "1000", "PPS de Masscan")
-	scanCmd.Flags().IntVar(&port, "port", 25565, "Puerto objetivo")
-	scanCmd.Flags().IntVarP(&workers, "workers", "w", 1000, "Goroutines concurrentes")
-	scanCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Muestra detalles de cada servidor encontrado")
-	scanCmd.Flags().StringVar(&excludeFile, "exclude", "", "Archivo de exclusiones (rangos de IP a evitar)")
-	rootCmd.AddCommand(scanCmd)
+	ScanCmd.Flags().StringVarP(&ipRange, "range", "r", "", "Rango CIDR (ej: 1.1.1.0/24)")
+	ScanCmd.Flags().StringVarP(&rate, "rate", "p", "1000", "PPS de Masscan")
+	ScanCmd.Flags().IntVar(&port, "port", 25565, "Puerto objetivo")
+	ScanCmd.Flags().IntVarP(&workers, "workers", "w", 1000, "Goroutines concurrentes")
+	ScanCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Muestra detalles de cada servidor encontrado")
+	ScanCmd.Flags().StringVar(&excludeFile, "exclude", "", "Archivo de exclusiones (rangos de IP a evitar)")
+	rootCmd.AddCommand(ScanCmd)
 }
+
+
