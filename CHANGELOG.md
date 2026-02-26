@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/miguerubsk/MinecraftCrawler/compare/v0.1.0...v0.1.1) (2026-02-26)
+
+
+### Bug Fixes
+
+* restore codeql deleted by mistake ([e48debb](https://github.com/miguerubsk/MinecraftCrawler/commit/e48debb2dca552c90e38aadb58b05af1431a59d8))
+
 ## [0.1.0](https://github.com/miguerubsk/MinecraftCrawler/compare/v0.0.1...v0.1.0) (2026-02-25)
 
 
