@@ -62,7 +62,7 @@ func mockMCServer(t *testing.T, response protocol.StatusResponse) (string, func(
 		// Just consume rest of handshake + request packet
 		// In reality we should parse it properly, but skipping bytes works for mocking
 		buffer := make([]byte, 1024)
-		conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
+		_ = conn.SetReadDeadline(time.Now().Add(100 * time.Millisecond))
 		_, _ = conn.Read(buffer) // Consume status request 0x00
 
 		// Prepare response
