@@ -16,9 +16,6 @@ permissions:
   contents: read
   security-events: write
 
-permissions:
-  contents: read
-  security-events: write
 
 jobs:
   codeql:
