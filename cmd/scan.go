@@ -6,6 +6,7 @@ import (
 	"MinecraftCrawler/internal/storage"
 	"io"
 	"fmt"
+	"strings"
 	"log"
 	"os"
 	"sync"
@@ -32,6 +33,7 @@ var ScanCmd = &cobra.Command{
   mccrawler scan --range 192.168.1.0/24 --exclude samples/exclude.txt`,
 	Run: func(cmd *cobra.Command, args []string) {
 		PrintBanner()
+		startTime := time.Now()
 
 
 		// 1. Configurar Logger dual (Archivo + Consola)
@@ -77,11 +79,12 @@ var ScanCmd = &cobra.Command{
 						if verbose > 0 && int(count) <= verbose {
 							// \r\033[K limpia la línea actual antes de imprimir para evitar restos de Masscan
 							fmt.Print("\r\033[K")
-							color.Green("[+] %-15s | %-15s | P: %d/%d | WL: %t\n",
-								detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
+							timestamp := time.Now().Format("15:04:05")
+							color.New(color.FgHiGreen).Printf("[%s] [+] %-15s | %-15s | P: %d/%d | WL: %t\n",
+								timestamp, detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
 						} else if verbose > 0 && int(count) == verbose + 1 {
 							fmt.Print("\r\033[K")
-							color.Yellow("[*] Límite de %d logs alcanzado. Continuando escaneo silencioso en base de datos...\n", verbose)
+							color.New(color.FgHiYellow).Printf("[*] Límite de %d logs alcanzado. Continuando escaneo silencioso en base de datos...\n", verbose)
 						}
 						
 						resultChan <- detail
@@ -105,8 +108,28 @@ var ScanCmd = &cobra.Command{
 		
 		// Pequeña pausa para asegurar que el storage manager termine de escribir el último batch
 		time.Sleep(1 * time.Second)
-		color.Green("\n[*] Escaneo finalizado. Total encontrados: %d. Datos en: %s", atomic.LoadInt32(&foundCount), dbPath)
+		
+		totalFound := atomic.LoadInt32(&foundCount)
+		duration := time.Since(startTime)
+		showSummary(totalFound, duration, dbPath)
 	},
+}
+
+func showSummary(total int32, duration time.Duration, db string) {
+	color.HiCyan("\n" + strings.Repeat("━", 50))
+	color.HiWhite("  RESUMEN DEL ESCANEO")
+	color.HiCyan(strings.Repeat("━", 50))
+	
+	fmt.Printf("  %-20s %s\n", "Total Encontrados:", color.HiGreenString("%d", total))
+	fmt.Printf("  %-20s %s\n", "Tiempo Total:", color.HiWhiteString("%s", duration.Round(time.Second)))
+	
+	if duration.Seconds() > 0 {
+		avg := float64(total) / duration.Minutes()
+		fmt.Printf("  %-20s %s/min\n", "Velocidad Media:", color.HiWhiteString("%.2f", avg))
+	}
+	
+	fmt.Printf("  %-20s %s\n", "Base de Datos:", color.HiYellowString(db))
+	color.HiCyan(strings.Repeat("━", 50) + "\n")
 }
 
 func init() {
