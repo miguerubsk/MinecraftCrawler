@@ -5,6 +5,7 @@ import (
 	"MinecraftCrawler/internal/scanner"
 	"MinecraftCrawler/internal/storage"
 	"io"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -74,9 +75,12 @@ var ScanCmd = &cobra.Command{
 						count := atomic.AddInt32(&foundCount, 1)
 
 						if verbose > 0 && int(count) <= verbose {
+							// \r\033[K limpia la línea actual antes de imprimir para evitar restos de Masscan
+							fmt.Print("\r\033[K")
 							color.Green("[+] %-15s | %-15s | P: %d/%d | WL: %t\n",
 								detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
 						} else if verbose > 0 && int(count) == verbose + 1 {
+							fmt.Print("\r\033[K")
 							color.Yellow("[*] Límite de %d logs alcanzado. Continuando escaneo silencioso en base de datos...\n", verbose)
 						}
 						
