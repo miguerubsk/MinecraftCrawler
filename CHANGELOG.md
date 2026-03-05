@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.0](https://github.com/miguerubsk/MinecraftCrawler/compare/v0.1.2...v0.2.0) (2026-03-05)
+
+
+### Features
+
+* add session summary dashboard and refined timestamps to logs ([4bb1243](https://github.com/miguerubsk/MinecraftCrawler/commit/4bb1243ea8af2a247d30cd96b4f783f3ec3bf998))
+* enhance CLI aesthetics and real-time scanner feedback ([81a2041](https://github.com/miguerubsk/MinecraftCrawler/commit/81a2041fdf39983c9bacce1591323c367b610545))
+
+
+### Bug Fixes
+
+* clear terminal line before logging to avoid overlap with masscan progress ([07dcec1](https://github.com/miguerubsk/MinecraftCrawler/commit/07dcec18fe5d75200bbc0a6e47c59580922f1a41))
+* unify terminal and file output to ensure all logs are captured ([2d65de2](https://github.com/miguerubsk/MinecraftCrawler/commit/2d65de29e8c377fc4ec46573610e6472a2fb5681))
+
 ## [0.1.2](https://github.com/miguerubsk/MinecraftCrawler/compare/v0.1.1...v0.1.2) (2026-02-26)
 
 
