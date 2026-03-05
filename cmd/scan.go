@@ -19,7 +19,7 @@ var (
 	rate        string
 	port        int
 	workers     int
-	verbose     bool
+	verbose     int
 	excludeFile string
 )
 
@@ -57,6 +57,7 @@ var ScanCmd = &cobra.Command{
 		var foundCount int32
 
 		// 3. Storage Manager (Escritura en disco optimizada)
+		// El manager de almacenamiento siempre usará un batch de 500 para eficiencia
 		go storage.StartSQLiteManager(db, resultChan, 500)
 
 		// 4. Worker Pool de Análisis
@@ -71,11 +72,11 @@ var ScanCmd = &cobra.Command{
 						// Incrementamos el contador de forma segura entre hilos
 						count := atomic.AddInt32(&foundCount, 1)
 
-						if verbose && count <= 500 {
+						if verbose > 0 && int(count) <= verbose {
 							color.Green("[+] %-15s | %-15s | P: %d/%d | WL: %t",
 								detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
-						} else if count == 501 {
-							color.Yellow("[*] Límite de 500 logs alcanzado. Continuando escaneo silencioso en base de datos...")
+						} else if verbose > 0 && int(count) == verbose + 1 {
+							color.Yellow("[*] Límite de %d logs alcanzado. Continuando escaneo silencioso en base de datos...", verbose)
 						}
 						
 						resultChan <- detail
@@ -108,7 +109,8 @@ func init() {
 	ScanCmd.Flags().StringVarP(&rate, "rate", "p", "1000", "PPS de Masscan")
 	ScanCmd.Flags().IntVar(&port, "port", 25565, "Puerto objetivo")
 	ScanCmd.Flags().IntVarP(&workers, "workers", "w", 1000, "Goroutines concurrentes")
-	ScanCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Muestra detalles de cada servidor encontrado")
+	ScanCmd.Flags().IntVarP(&verbose, "verbose", "v", 0, "Muestra detalles de cada servidor encontrado (opcional: límite de líneas, default 500)")
+	ScanCmd.Flags().Lookup("verbose").NoOptDefVal = "500"
 	ScanCmd.Flags().StringVar(&excludeFile, "exclude", "", "Archivo de exclusiones (rangos de IP a evitar)")
 	
 	ScanCmd.MarkFlagRequired("range")

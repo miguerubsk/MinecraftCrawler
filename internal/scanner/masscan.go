@@ -2,10 +2,10 @@ package scanner
 
 import (
 	"bufio"
-	"encoding/json"
 	"fmt"
 	"os" // Importante para os.Stderr
 	"os/exec"
+	"strings"
 )
 
 type MasscanResult struct {
@@ -21,7 +21,7 @@ func BuildArguments(ipRange string, rate string, port int, excludeFile string) [
 		ipRange,
 		"-p", fmt.Sprintf("%d", port),
 		"--rate", rate,
-		"-oJ", "-",
+		"-oL", "-",
 	}
 
 	if excludeFile != "" {
@@ -55,19 +55,11 @@ func Run(ipRange string, rate string, port int, excludeFile string, ipChan chan<
 		defer close(ipChan)
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
-			line := scanner.Bytes()
-			if len(line) < 10 || line[0] == '[' || line[0] == ']' {
-				continue
-			}
-			if line[len(line)-1] == ',' {
-				line = line[:len(line)-1]
-			}
-
-			var res MasscanResult
-			if err := json.Unmarshal(line, &res); err == nil {
-				if len(res.Ports) > 0 {
-					ipChan <- res.IP
-				}
+			line := scanner.Text()
+			// Formato: "open tcp 25565 1.2.3.4 123456789"
+			parts := strings.Fields(line)
+			if len(parts) >= 4 && parts[0] == "open" {
+				ipChan <- parts[3]
 			}
 		}
 		_ = cmd.Wait()
