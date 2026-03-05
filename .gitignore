@@ -23,6 +23,8 @@ go.work
 *.db-wal
 debug*
 mccrawler
+*.log
+paused.conf
 
 # IDEs
 .vscode/

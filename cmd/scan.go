@@ -4,15 +4,16 @@ import (
 	"MinecraftCrawler/internal/protocol"
 	"MinecraftCrawler/internal/scanner"
 	"MinecraftCrawler/internal/storage"
-	"fmt"
 	"io"
+	"fmt"
+	"strings"
 	"log"
 	"os"
 	"sync"
 	"sync/atomic"
 	"time"
-
 	"github.com/spf13/cobra"
+	"github.com/fatih/color"
 )
 
 var (
@@ -20,20 +21,25 @@ var (
 	rate        string
 	port        int
 	workers     int
-	verbose     bool
+	verbose     int
 	excludeFile string
 )
 
 var ScanCmd = &cobra.Command{
 	Use:   "scan",
 	Short: "Inicia el escaneo y análisis",
+	Example: `  mccrawler scan --range 1.1.1.0/24 --rate 1000
+  mccrawler scan -r 1.2.3.4/32 -w 500 -v
+  mccrawler scan --range 192.168.1.0/24 --exclude samples/exclude.txt`,
 	Run: func(cmd *cobra.Command, args []string) {
+		PrintBanner()
+		startTime := time.Now()
 
 
 		// 1. Configurar Logger dual (Archivo + Consola)
 		logFile, err := os.OpenFile("crawler.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			fmt.Printf("Error al crear archivo de log: %v\n", err)
+			color.Red("Error al crear archivo de log: %v", err)
 			return
 		}
 		defer logFile.Close()
@@ -41,6 +47,8 @@ var ScanCmd = &cobra.Command{
 		// MultiWriter envía los logs a ambos destinos
 		multiWriter := io.MultiWriter(os.Stdout, logFile)
 		log.SetOutput(multiWriter)
+		// Configurar la librería color para que escriba en el MultiWriter
+		color.Output = multiWriter
 
 		// 2. Inicializar DB
 		db, err := storage.NewDatabase(dbPath)
@@ -55,6 +63,7 @@ var ScanCmd = &cobra.Command{
 		var foundCount int32
 
 		// 3. Storage Manager (Escritura en disco optimizada)
+		// El manager de almacenamiento siempre usará un batch de 500 para eficiencia
 		go storage.StartSQLiteManager(db, resultChan, 500)
 
 		// 4. Worker Pool de Análisis
@@ -69,11 +78,15 @@ var ScanCmd = &cobra.Command{
 						// Incrementamos el contador de forma segura entre hilos
 						count := atomic.AddInt32(&foundCount, 1)
 
-						if verbose && count <= 500 {
-							log.Printf("[+] %-15s | %-15s | P: %d/%d | WL: %t",
-								detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
-						} else if count == 501 {
-							log.Println("[*] Límite de 500 logs alcanzado. Continuando escaneo silencioso en base de datos...")
+						if verbose > 0 && int(count) <= verbose {
+							// \r\033[K limpia la línea actual antes de imprimir para evitar restos de Masscan
+							fmt.Print("\r\033[K")
+							timestamp := time.Now().Format("15:04:05")
+							color.New(color.FgHiGreen).Printf("[%s] [+] %-15s | %-15s | P: %d/%d | WL: %t\n",
+								timestamp, detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
+						} else if verbose > 0 && int(count) == verbose + 1 {
+							fmt.Print("\r\033[K")
+							color.New(color.FgHiYellow).Printf("[*] Límite de %d logs alcanzado. Continuando escaneo silencioso en base de datos...\n", verbose)
 						}
 						
 						resultChan <- detail
@@ -83,11 +96,12 @@ var ScanCmd = &cobra.Command{
 		}
 
 		// 5. Ejecutar Masscan
-		log.Printf("[*] Iniciando escaneo en %s (Puerto: %d, Workers: %d, Rate: %s)\n", ipRange, port, workers, rate)
+		color.Cyan("[*] Iniciando escaneo en %s (Puerto: %d, Workers: %d, Rate: %s)\n", ipRange, port, workers, rate)
 		
 		err = scanner.Run(ipRange, rate, port, excludeFile, ipChan)
 		if err != nil {
-			log.Fatalf("Error ejecutando Masscan: %v", err)
+			color.Red("Error ejecutando Masscan: %v\n", err)
+			os.Exit(1)
 		}
 
 		// Esperar a que los workers terminen
@@ -96,8 +110,28 @@ var ScanCmd = &cobra.Command{
 		
 		// Pequeña pausa para asegurar que el storage manager termine de escribir el último batch
 		time.Sleep(1 * time.Second)
-		log.Printf("\n[*] Escaneo finalizado. Total encontrados: %d. Datos en: %s\n", atomic.LoadInt32(&foundCount), dbPath)
+		
+		totalFound := atomic.LoadInt32(&foundCount)
+		duration := time.Since(startTime)
+		showSummary(totalFound, duration, dbPath, multiWriter)
 	},
+}
+
+func showSummary(total int32, duration time.Duration, db string, out io.Writer) {
+	fmt.Fprintf(out, "%s\n", color.HiCyanString("\n"+strings.Repeat("━", 50)))
+	fmt.Fprintf(out, "%s\n", color.HiWhiteString("  RESUMEN DEL ESCANEO"))
+	fmt.Fprintf(out, "%s\n", color.HiCyanString(strings.Repeat("━", 50)))
+	
+	fmt.Fprintf(out, "  %-20s %s\n", "Total Encontrados:", color.HiGreenString("%d", total))
+	fmt.Fprintf(out, "  %-20s %s\n", "Tiempo Total:", color.HiWhiteString("%s", duration.Round(time.Second)))
+	
+	if duration.Seconds() > 0 {
+		avg := float64(total) / duration.Minutes()
+		fmt.Fprintf(out, "  %-20s %s/min\n", "Velocidad Media:", color.HiWhiteString("%.2f", avg))
+	}
+	
+	fmt.Fprintf(out, "  %-20s %s\n", "Base de Datos:", color.HiYellowString(db))
+	fmt.Fprintf(out, "%s\n", color.HiCyanString(strings.Repeat("━", 50)+"\n"))
 }
 
 func init() {
@@ -105,8 +139,12 @@ func init() {
 	ScanCmd.Flags().StringVarP(&rate, "rate", "p", "1000", "PPS de Masscan")
 	ScanCmd.Flags().IntVar(&port, "port", 25565, "Puerto objetivo")
 	ScanCmd.Flags().IntVarP(&workers, "workers", "w", 1000, "Goroutines concurrentes")
-	ScanCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Muestra detalles de cada servidor encontrado")
+	ScanCmd.Flags().IntVarP(&verbose, "verbose", "v", 0, "Muestra detalles de cada servidor encontrado (opcional: límite de líneas, default 500)")
+	ScanCmd.Flags().Lookup("verbose").NoOptDefVal = "500"
 	ScanCmd.Flags().StringVar(&excludeFile, "exclude", "", "Archivo de exclusiones (rangos de IP a evitar)")
+	
+	ScanCmd.MarkFlagRequired("range")
+	
 	rootCmd.AddCommand(ScanCmd)
 }
 
