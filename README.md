@@ -57,7 +57,8 @@ Key Features:
 - **Extreme Speed**: Pipeline architecture capable of processing thousands of servers per second.
 - **Efficiency**: Optimized use of goroutines and SQLite database with WAL mode for batch writing.
 - **Deep Analysis**: Extracts version, players, MOTD, mod list (Forge), plugins, and checks for whitelist status.
-- **Robust CLI**: Easy-to-use command-line interface built with Cobra.
+- **Premium CLI**: Highly professional terminal interface with ASCII branding, color-coded output, and real-time feedback.
+- **Automatic Logging**: Every session is automatically recorded in `crawler.log` for later analysis.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -120,16 +121,17 @@ sudo ./mccrawler scan --range 1.1.0.0/16 --rate 5000 --workers 2000
 
 **Available Options:**
 
-| Flag        | Shorthand | Description                               | Default      |
-| ----------- | --------- | ----------------------------------------- | ------------ |
-| `--range`   | `-r`      | CIDR range to scan (e.g., 192.168.1.0/24) | `""`         |
-| `--rate`    | `-p`      | Packets per second (Masscan)              | `1000`       |
-| `--port`    |           | Port to scan (25565 or 25575)             | `25565`      |
-| `--workers` | `-w`      | Number of concurrent worker threads       | `1000`       |
-| `--exclude` |           | IP exclusion file                         | `""`         |
-| `--output`  | `-o`      | Output database file                      | `results.db` |
+| Flag        | Shorthand | Description                                               | Default      |
+| ----------- | --------- | --------------------------------------------------------- | ------------ |
+| `--range`   | `-r`      | **Required**. CIDR range to scan (e.g., 1.1.1.0/24)       | `""`         |
+| `--rate`    | `-p`      | Packets per second (Masscan)                              | `1000`       |
+| `--port`    |           | Port to scan (25565 or 25575)                             | `25565`      |
+| `--workers` | `-w`      | Number of concurrent worker threads                       | `1000`       |
+| `--verbose` | `-v`      | Display found servers (limit lines, optional default 500) | `0`          |
+| `--exclude` |           | IP exclusion file                                         | `""`         |
+| `--output`  | `-o`      | Output database file                                      | `results.db` |
 
-_Check `mccrawler help` for more information._
+_Check `mccrawler help` for more information. All execution logs are automatically saved to `crawler.log`. At the end of each scan, a statistical summary dashboard is displayed._
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -174,4 +176,3 @@ Distributed under the GPL-3.0 License. See `LICENSE` for more information.
 This tool is for educational purposes only. Unauthorized scanning of networks without permission can be illegal and unethical. Always ensure you have proper authorization before using this tool. The author is not responsible for its misuse or the consequences of scanning networks without authorization.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
