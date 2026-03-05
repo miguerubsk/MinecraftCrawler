@@ -17,7 +17,8 @@
   </p>
 </div>
 
-[![build](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go.yml)
+[![build](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go-build.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go-build.yml)
+[![test](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go-test.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go-test.yml)
 [![golangci-lint](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/lint.yml/badge.svg)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/lint.yml)
 [![CodeQL](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/codeql.yml)
 
