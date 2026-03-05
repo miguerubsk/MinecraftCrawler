@@ -30,6 +30,7 @@ var ScanCmd = &cobra.Command{
   mccrawler scan -r 1.2.3.4/32 -w 500 -v
   mccrawler scan --range 192.168.1.0/24 --exclude samples/exclude.txt`,
 	Run: func(cmd *cobra.Command, args []string) {
+		PrintBanner()
 
 
 		// 1. Configurar Logger dual (Archivo + Consola)
@@ -73,10 +74,10 @@ var ScanCmd = &cobra.Command{
 						count := atomic.AddInt32(&foundCount, 1)
 
 						if verbose > 0 && int(count) <= verbose {
-							color.Green("[+] %-15s | %-15s | P: %d/%d | WL: %t",
+							color.Green("[+] %-15s | %-15s | P: %d/%d | WL: %t\n",
 								detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
 						} else if verbose > 0 && int(count) == verbose + 1 {
-							color.Yellow("[*] Límite de %d logs alcanzado. Continuando escaneo silencioso en base de datos...", verbose)
+							color.Yellow("[*] Límite de %d logs alcanzado. Continuando escaneo silencioso en base de datos...\n", verbose)
 						}
 						
 						resultChan <- detail
@@ -86,11 +87,11 @@ var ScanCmd = &cobra.Command{
 		}
 
 		// 5. Ejecutar Masscan
-		color.Cyan("[*] Iniciando escaneo en %s (Puerto: %d, Workers: %d, Rate: %s)", ipRange, port, workers, rate)
+		color.Cyan("[*] Iniciando escaneo en %s (Puerto: %d, Workers: %d, Rate: %s)\n", ipRange, port, workers, rate)
 		
 		err = scanner.Run(ipRange, rate, port, excludeFile, ipChan)
 		if err != nil {
-			color.Red("Error ejecutando Masscan: %v", err)
+			color.Red("Error ejecutando Masscan: %v\n", err)
 			os.Exit(1)
 		}
 
