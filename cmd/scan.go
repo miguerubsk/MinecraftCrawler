@@ -47,6 +47,8 @@ var ScanCmd = &cobra.Command{
 		// MultiWriter envía los logs a ambos destinos
 		multiWriter := io.MultiWriter(os.Stdout, logFile)
 		log.SetOutput(multiWriter)
+		// Configurar la librería color para que escriba en el MultiWriter
+		color.Output = multiWriter
 
 		// 2. Inicializar DB
 		db, err := storage.NewDatabase(dbPath)
@@ -111,25 +113,25 @@ var ScanCmd = &cobra.Command{
 		
 		totalFound := atomic.LoadInt32(&foundCount)
 		duration := time.Since(startTime)
-		showSummary(totalFound, duration, dbPath)
+		showSummary(totalFound, duration, dbPath, multiWriter)
 	},
 }
 
-func showSummary(total int32, duration time.Duration, db string) {
-	color.HiCyan("\n" + strings.Repeat("━", 50))
-	color.HiWhite("  RESUMEN DEL ESCANEO")
-	color.HiCyan(strings.Repeat("━", 50))
+func showSummary(total int32, duration time.Duration, db string, out io.Writer) {
+	fmt.Fprintf(out, color.HiCyanString("\n"+strings.Repeat("━", 50))+"\n")
+	fmt.Fprintf(out, color.HiWhiteString("  RESUMEN DEL ESCANEO")+"\n")
+	fmt.Fprintf(out, color.HiCyanString(strings.Repeat("━", 50))+"\n")
 	
-	fmt.Printf("  %-20s %s\n", "Total Encontrados:", color.HiGreenString("%d", total))
-	fmt.Printf("  %-20s %s\n", "Tiempo Total:", color.HiWhiteString("%s", duration.Round(time.Second)))
+	fmt.Fprintf(out, "  %-20s %s\n", "Total Encontrados:", color.HiGreenString("%d", total))
+	fmt.Fprintf(out, "  %-20s %s\n", "Tiempo Total:", color.HiWhiteString("%s", duration.Round(time.Second)))
 	
 	if duration.Seconds() > 0 {
 		avg := float64(total) / duration.Minutes()
-		fmt.Printf("  %-20s %s/min\n", "Velocidad Media:", color.HiWhiteString("%.2f", avg))
+		fmt.Fprintf(out, "  %-20s %s/min\n", "Velocidad Media:", color.HiWhiteString("%.2f", avg))
 	}
 	
-	fmt.Printf("  %-20s %s\n", "Base de Datos:", color.HiYellowString(db))
-	color.HiCyan(strings.Repeat("━", 50) + "\n")
+	fmt.Fprintf(out, "  %-20s %s\n", "Base de Datos:", color.HiYellowString(db))
+	fmt.Fprintf(out, color.HiCyanString(strings.Repeat("━", 50)+"\n")+"\n")
 }
 
 func init() {

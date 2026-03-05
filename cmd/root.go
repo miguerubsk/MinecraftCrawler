@@ -26,7 +26,7 @@ var rootCmd = &cobra.Command{
 }
 
 func PrintBanner() {
-	fmt.Println(color.GreenString(banner))
+	fmt.Fprintln(color.Output, color.GreenString(banner))
 }
 
 func Execute() {
