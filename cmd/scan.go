@@ -118,9 +118,9 @@ var ScanCmd = &cobra.Command{
 }
 
 func showSummary(total int32, duration time.Duration, db string, out io.Writer) {
-	fmt.Fprintf(out, color.HiCyanString("\n"+strings.Repeat("━", 50))+"\n")
-	fmt.Fprintf(out, color.HiWhiteString("  RESUMEN DEL ESCANEO")+"\n")
-	fmt.Fprintf(out, color.HiCyanString(strings.Repeat("━", 50))+"\n")
+	fmt.Fprintf(out, "%s\n", color.HiCyanString("\n"+strings.Repeat("━", 50)))
+	fmt.Fprintf(out, "%s\n", color.HiWhiteString("  RESUMEN DEL ESCANEO"))
+	fmt.Fprintf(out, "%s\n", color.HiCyanString(strings.Repeat("━", 50)))
 	
 	fmt.Fprintf(out, "  %-20s %s\n", "Total Encontrados:", color.HiGreenString("%d", total))
 	fmt.Fprintf(out, "  %-20s %s\n", "Tiempo Total:", color.HiWhiteString("%s", duration.Round(time.Second)))
@@ -131,7 +131,7 @@ func showSummary(total int32, duration time.Duration, db string, out io.Writer) 
 	}
 	
 	fmt.Fprintf(out, "  %-20s %s\n", "Base de Datos:", color.HiYellowString(db))
-	fmt.Fprintf(out, color.HiCyanString(strings.Repeat("━", 50)+"\n")+"\n")
+	fmt.Fprintf(out, "%s\n", color.HiCyanString(strings.Repeat("━", 50)+"\n"))
 }
 
 func init() {
