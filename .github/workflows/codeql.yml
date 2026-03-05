@@ -27,10 +27,10 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Go
-        if: matrix.os == 'macos-latest'
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: "1.24"
+          cache: true
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v4
 
