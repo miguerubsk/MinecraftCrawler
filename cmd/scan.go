@@ -143,9 +143,12 @@ func init() {
 	ScanCmd.Flags().Lookup("verbose").NoOptDefVal = "500"
 	ScanCmd.Flags().StringVar(&excludeFile, "exclude", "", "Archivo de exclusiones (rangos de IP a evitar)")
 	
-	ScanCmd.MarkFlagRequired("range")
+	if err := ScanCmd.MarkFlagRequired("range"); err != nil {
+    	log.Fatalf("error configurando flags: %v", err)
+	}
 	
 	rootCmd.AddCommand(ScanCmd)
 }
+
 
 
