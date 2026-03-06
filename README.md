@@ -147,6 +147,13 @@ _Check `mccrawler help` for more information. All execution logs are automatical
 - [ ] RCON scanning support
 - [ ] Export to JSON/CSV format
 - [ ] Web dashboard for result visualization
+- [ ] **Query Protocol (UDP)** support for detailed Player/Plugin info
+- [ ] **GeoIP Integration** (Country/Flag detection)
+- [ ] **Webhook Notifications** (Discord/Slack support)
+- [ ] **Favicon Extraction** and local PNG storage
+- [ ] **CLI Search** command for quick result filtering
+- [ ] **RCON Password Auditing** module
+- [ ] **Single Target Scan** (IP/Domain) with auto-detect logic
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
