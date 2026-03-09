@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	// "github.com/fatih/color" <-- Para el Hito 03
+	// TODO: Integrate colored console output (milestone 03) using github.com/fatih/color
 )
 
-var infoCmd = &cobra.Command{
+var InfoCmd = &cobra.Command{
 	Use:   "info [target]",
 	Short: "Deep analysis of a single Minecraft server",
 	Long: `Performs a comprehensive analysis of a specific server.
@@ -31,15 +31,15 @@ and attempts UDP Query protocol extraction.`,
 				return fmt.Errorf("invalid port in target: %v", err)
 			}
 		} else {
-			// Si falla SplitHostPort, comprobamos si es por un IPv6 mal formateado (sin corchetes pero con puerto)
-			if strings.Count(target, ":") > 1 && !strings.Contains(target, "[") {
-				return fmt.Errorf("malformed IPv6 address: use '[addr]:port' format for IPv6 with literal ports")
-			}
-
-			// Comprobamos si es una IP literal (v4 o v6)
+			// Comprobamos si es una IP literal (v4 o v6) antes de cualquier otra lógica
 			if net.ParseIP(target) != nil {
 				fmt.Printf("[*] IP address detected, skipping SRV lookup for %s\n", host)
 			} else {
+				// Si no es un IP válida y tiene varios ":", es un IPv6 mal formateado (le faltan los [])
+				if strings.Count(target, ":") > 1 {
+					return fmt.Errorf("malformed IPv6 address: use '[addr]:port' format for IPv6 with literal ports")
+				}
+
 				// Intento de resolución SRV si no hay puerto explícito ni es IP
 				fmt.Printf("[*] No port specified, attempting SRV lookup for %s...\n", host)
 				_, addrs, err := net.LookupSRV("minecraft", "tcp", host)
@@ -74,5 +74,5 @@ and attempts UDP Query protocol extraction.`,
 }
 
 func init() {
-	rootCmd.AddCommand(infoCmd)
+	rootCmd.AddCommand(InfoCmd)
 }
