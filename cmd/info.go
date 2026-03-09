@@ -24,9 +24,10 @@ and attempts UDP Query protocol extraction.`,
 		host := target
 		port := 25565
 
-		if h, p, err := net.SplitHostPort(target); err == nil {
-			host = h
-			fmt.Sscanf(p, "%d", &port)
+		if _, p, err := net.SplitHostPort(target); err == nil {
+			if _, err := fmt.Sscanf(p, "%d", &port); err != nil {
+				fmt.Printf("Invalid port in target: %v\n", err)
+			}
 		} else {
 			// Intento de resolución SRV si no hay puerto explícito
 			fmt.Printf("[*] No port specified, attempting SRV lookup for %s...\n", host)
