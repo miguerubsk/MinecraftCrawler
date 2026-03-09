@@ -49,6 +49,7 @@ func sendHandshake(conn net.Conn, host string, port int, protocol int, nextState
 }
 
 func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, error) {
+	overallDeadline := time.Now().Add(timeout)
 	detail := &ServerDetail{
 		IP: ip, Port: port, Timestamp: time.Now(), Mods: make(map[string]string),
 	}
@@ -82,7 +83,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	connLogin, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
 	if err == nil {
 		defer connLogin.Close()
-		_ = connLogin.SetDeadline(time.Now().Add(timeout))
+		_ = connLogin.SetDeadline(overallDeadline)
 		_ = sendHandshake(connLogin, ip, port, detail.Protocol, 2)
 
 		ls := new(bytes.Buffer)
@@ -126,7 +127,9 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		if query.Software != "" {
 			detail.Software = query.Software
 		}
-		detail.MapName = query.MapName
+		if query.MapName != "" {
+			detail.MapName = query.MapName
+		}
 	}
 
 	return detail, nil

@@ -71,21 +71,21 @@ and attempts UDP Query protocol extraction.`,
 		}
 
 		// 3. TODO: Format rich output (Issue #23)
-		fmt.Printf("\n--- Technical Data ---\n")
-		fmt.Printf("IP: %s | Port: %d\n", detail.IP, detail.Port)
+		fmt.Printf("\n--- Datos Técnicos ---\n")
+		fmt.Printf("IP: %s | Puerto: %d\n", detail.IP, detail.Port)
 		fmt.Printf("MOTD: %s\n", detail.MOTD)
-		fmt.Printf("Version: %s (Protocol: %d)\n", detail.VersionName, detail.Protocol)
-		fmt.Printf("Players: %d/%d\n", detail.PlayersOnline, detail.PlayersMax)
-		fmt.Printf("Software: %s | Map: %s\n", detail.Software, detail.MapName)
+		fmt.Printf("Versión: %s (Protocolo: %d)\n", detail.VersionName, detail.Protocol)
+		fmt.Printf("Jugadores: %d/%d\n", detail.PlayersOnline, detail.PlayersMax)
+		fmt.Printf("Software: %s | Mapa: %s\n", detail.Software, detail.MapName)
 		
 		if detail.IsWhitelist {
-			fmt.Println("Whitelist: Enabled")
+			fmt.Println("Lista Blanca: Activada")
 		}
 		if detail.EnforcesSecureChat {
-			fmt.Println("Secure Chat: Enforced")
+			fmt.Println("Chat Seguro: Obligatorio")
 		}
 		if detail.RconOpen {
-			fmt.Println("RCON: Open")
+			fmt.Println("RCON: Abierto")
 		}
 
 		if len(detail.Mods) > 0 {
@@ -101,7 +101,7 @@ and attempts UDP Query protocol extraction.`,
 			fmt.Printf("Plugins (%d): %s\n", len(detail.Plugins), strings.Join(detail.Plugins, ", "))
 		}
 
-		fmt.Println("\nDeep analysis complete. Visual formatting pending (Issue #23).")
+		fmt.Println("\nAnálisis profundo completado. Formateo visual pendiente (Issue #23).")
 		return nil
 	},
 }
