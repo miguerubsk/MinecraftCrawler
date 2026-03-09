@@ -67,6 +67,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	detail.PlayersMax = status.Players.Max
 	detail.PlayersOnline = status.Players.Online
 	detail.EnforcesSecureChat = status.EnforcesSecureChat
+	detail.MOTD = parseMOTD(status.Description)
 
 	if status.Favicon != "" {
 		b64 := strings.TrimPrefix(status.Favicon, "data:image/png;base64,")
@@ -124,6 +125,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		if query.Software != "" {
 			detail.Software = query.Software
 		}
+		detail.MapName = query.MapName
 	}
 
 	return detail, nil
@@ -196,4 +198,29 @@ func ReadVarIntSafe(r io.Reader) (int, error) {
 		if shift > 35 { return 0, fmt.Errorf("varint too big") }
 	}
 	return value, nil
+}
+
+func parseMOTD(desc interface{}) string {
+	if s, ok := desc.(string); ok {
+		return s
+	}
+	if m, ok := desc.(map[string]interface{}); ok {
+		if t, ok := m["text"].(string); ok {
+			return t
+		}
+		if extra, ok := m["extra"].([]interface{}); ok {
+			var fullText strings.Builder
+			for _, part := range extra {
+				if partMap, ok := part.(map[string]interface{}); ok {
+					if partText, ok := partMap["text"].(string); ok {
+						fullText.WriteString(partText)
+					}
+				} else if partStr, ok := part.(string); ok {
+					fullText.WriteString(partStr)
+				}
+			}
+			return fullText.String()
+		}
+	}
+	return ""
 }

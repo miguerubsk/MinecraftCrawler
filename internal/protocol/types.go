@@ -16,6 +16,7 @@ type ServerDetail struct {
 	PlayersOnline      int               `json:"players_online"`
 	PlayersMax         int               `json:"players_max"`
 	Software           string            `json:"software"`
+	MapName            string            `json:"map_name"`
 	Mods               map[string]string `json:"mods"`
 	Plugins            []string          `json:"plugins"`
 	IsWhitelist        bool              `json:"whitelist"`

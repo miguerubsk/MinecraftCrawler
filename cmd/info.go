@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
+	"MinecraftCrawler/internal/protocol"
 
 	"github.com/spf13/cobra"
 	// TODO: Integrate colored console output (milestone 03) using github.com/fatih/color
@@ -21,7 +23,6 @@ and attempts UDP Query protocol extraction.`,
 
 		fmt.Printf("Analyzing target: %s\n", target)
 
-		// 1. TODO: Implement SRV Resolution (Issue #21)
 		host := target
 		port := 25565
 
@@ -65,10 +66,43 @@ and attempts UDP Query protocol extraction.`,
 		}
 
 		// 2. TODO: Trigger AnalyzeServer logic (Issue #22)
-		// 3. TODO: Format rich output (Issue #23)
+		detail, err := protocol.AnalyzeServer(host, port, 5*time.Second)
+		if err != nil {
+			return fmt.Errorf("analysis failed: %v", err)
+		}
 
-		fmt.Printf("[*] Target resolved: %s:%d\n", host, port)
-		fmt.Println("Logic for deep analysis (Issue #22) and rich UI (Issue #23) pending.")
+		// 3. TODO: Format rich output (Issue #23)
+		fmt.Printf("\n--- Technical Data ---\n")
+		fmt.Printf("IP: %s | Port: %d\n", detail.IP, detail.Port)
+		fmt.Printf("MOTD: %s\n", detail.MOTD)
+		fmt.Printf("Version: %s (Protocol: %d)\n", detail.VersionName, detail.Protocol)
+		fmt.Printf("Players: %d/%d\n", detail.PlayersOnline, detail.PlayersMax)
+		fmt.Printf("Software: %s | Map: %s\n", detail.Software, detail.MapName)
+		
+		if detail.IsWhitelist {
+			fmt.Println("Whitelist: Enabled")
+		}
+		if detail.EnforcesSecureChat {
+			fmt.Println("Secure Chat: Enforced")
+		}
+		if detail.RconOpen {
+			fmt.Println("RCON: Open")
+		}
+
+		if len(detail.Mods) > 0 {
+			fmt.Printf("Mods (%d): ", len(detail.Mods))
+			mods := make([]string, 0, len(detail.Mods))
+			for id, ver := range detail.Mods {
+				mods = append(mods, fmt.Sprintf("%s (%s)", id, ver))
+			}
+			fmt.Println(strings.Join(mods, ", "))
+		}
+
+		if len(detail.Plugins) > 0 {
+			fmt.Printf("Plugins (%d): %s\n", len(detail.Plugins), strings.Join(detail.Plugins, ", "))
+		}
+
+		fmt.Println("\nDeep analysis complete. Visual formatting pending (Issue #23).")
 		return nil
 	},
 }
