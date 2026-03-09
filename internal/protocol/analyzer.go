@@ -138,7 +138,6 @@ func analyzeRcon(detail *ServerDetail, timeout time.Duration) (*ServerDetail, er
 		return nil, err
 	}
 	defer conn.Close()
-	_ = conn.SetDeadline(time.Now().Add(timeout))
 
 	payload := ""
 	packet := new(bytes.Buffer)
@@ -208,11 +207,11 @@ func parseMOTD(desc interface{}) string {
 		return s
 	}
 	if m, ok := desc.(map[string]interface{}); ok {
+		var fullText strings.Builder
 		if t, ok := m["text"].(string); ok {
-			return t
+			fullText.WriteString(t)
 		}
 		if extra, ok := m["extra"].([]interface{}); ok {
-			var fullText strings.Builder
 			for _, part := range extra {
 				if partMap, ok := part.(map[string]interface{}); ok {
 					if partText, ok := partMap["text"].(string); ok {
@@ -222,8 +221,8 @@ func parseMOTD(desc interface{}) string {
 					fullText.WriteString(partStr)
 				}
 			}
-			return fullText.String()
 		}
+		return fullText.String()
 	}
 	return ""
 }

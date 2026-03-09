@@ -65,7 +65,6 @@ and attempts UDP Query protocol extraction.`,
 			return fmt.Errorf("port out of range: %d", port)
 		}
 
-		// 2. TODO: Trigger AnalyzeServer logic (Issue #22)
 		detail, err := protocol.AnalyzeServer(host, port, 5*time.Second)
 		if err != nil {
 			return fmt.Errorf("analysis failed: %v", err)
