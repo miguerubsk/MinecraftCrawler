@@ -82,6 +82,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	connLogin, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
 	if err == nil {
 		defer connLogin.Close()
+		_ = connLogin.SetDeadline(time.Now().Add(timeout))
 		_ = sendHandshake(connLogin, ip, port, detail.Protocol, 2)
 
 		ls := new(bytes.Buffer)
@@ -137,6 +138,7 @@ func analyzeRcon(detail *ServerDetail, timeout time.Duration) (*ServerDetail, er
 		return nil, err
 	}
 	defer conn.Close()
+	_ = conn.SetDeadline(time.Now().Add(timeout))
 
 	payload := ""
 	packet := new(bytes.Buffer)
@@ -161,6 +163,7 @@ func GetServerStatus(host string, port int, timeout time.Duration) (*StatusRespo
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), timeout)
 	if err != nil { return nil, err }
 	defer conn.Close()
+	_ = conn.SetDeadline(time.Now().Add(timeout))
 
 	_ = sendHandshake(conn, host, port, 763, 1)
 	sr := new(bytes.Buffer)

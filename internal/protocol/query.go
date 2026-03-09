@@ -23,6 +23,7 @@ func GetQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult, err
 		return nil, err
 	}
 	defer conn.Close()
+	_ = conn.SetDeadline(time.Now().Add(timeout))
 
 	sessionId := int32(0x01010101 & 0x0F0F0F0F)
 	
