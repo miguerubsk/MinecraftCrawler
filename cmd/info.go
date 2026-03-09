@@ -19,7 +19,7 @@ and attempts UDP Query protocol extraction.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		target := args[0]
 
-		fmt.Printf("🔍 Analyzing target: %s\n", target)
+		fmt.Printf("Analyzing target: %s\n", target)
 
 		// 1. TODO: Implement SRV Resolution (Issue #21)
 		host := target
