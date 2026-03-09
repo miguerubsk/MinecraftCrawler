@@ -20,7 +20,6 @@ Resuelve registros SRV, realiza Server List Ping (SLP)
 e intenta la extracción mediante protocolo UDP Query.`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		out := color.Output
 		target := args[0]
 
 		color.Cyan("[*] Analizando objetivo: %s\n", target)

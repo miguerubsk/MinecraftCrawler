@@ -49,7 +49,6 @@ func sendHandshake(conn net.Conn, host string, port int, protocol int, nextState
 }
 
 func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, error) {
-	overallDeadline := time.Now().Add(timeout)
 	detail := &ServerDetail{
 		IP: ip, Port: port, Timestamp: time.Now(), Mods: make(map[string]string),
 	}
