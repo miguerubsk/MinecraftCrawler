@@ -15,36 +15,49 @@ var infoCmd = &cobra.Command{
 It resolves SRV records, performs Server List Ping (SLP), 
 and attempts UDP Query protocol extraction.`,
 	Args: cobra.ExactArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		target := args[0]
 		
 		fmt.Printf("🔍 Analyzing target: %s\n", target)
 
-		// 1. TODO: Implement SRV Resolution (Issue #1)
+		// 1. TODO: Implement SRV Resolution (Issue #21)
 		host := target
 		port := 25565
 
-		if _, p, err := net.SplitHostPort(target); err == nil {
+		if h, p, err := net.SplitHostPort(target); err == nil {
+			host = h
 			if _, err := fmt.Sscanf(p, "%d", &port); err != nil {
-				fmt.Printf("Invalid port in target: %v\n", err)
+				return fmt.Errorf("invalid port in target: %v", err)
 			}
 		} else {
-			// Intento de resolución SRV si no hay puerto explícito
-			fmt.Printf("[*] No port specified, attempting SRV lookup for %s...\n", host)
-			_, addrs, err := net.LookupSRV("minecraft", "tcp", host)
-			if err == nil && len(addrs) > 0 {
-				host = strings.TrimSuffix(addrs[0].Target, ".")
-				port = int(addrs[0].Port)
-				fmt.Printf("✅ SRV found: %s:%d\n", host, port)
+			// Si no hay puerto, comprobamos si es una IP literal (v4 o v6)
+			// Si es IP, no intentamos SRV lookup
+			if net.ParseIP(target) != nil {
+				fmt.Printf("[*] IP address detected, skipping SRV lookup for %s\n", host)
 			} else {
-				fmt.Println("ℹ️ No SRV record found, using default port 25565")
+				// Intento de resolución SRV si no hay puerto explícito ni es IP
+				fmt.Printf("[*] No port specified, attempting SRV lookup for %s...\n", host)
+				_, addrs, err := net.LookupSRV("minecraft", "tcp", host)
+				if err == nil && len(addrs) > 0 {
+					host = strings.TrimSuffix(addrs[0].Target, ".")
+					port = int(addrs[0].Port)
+					fmt.Printf("SRV found: %s:%d\n", host, port)
+				} else {
+					fmt.Println("No SRV record found, using default port 25565")
+				}
 			}
 		}
 
-		// 2. TODO: Trigger AnalyzeServer logic (Issue #2)
-		// 3. TODO: Format rich output (Issue #3)
+		if port < 1 || port > 65535 {
+			return fmt.Errorf("port out of range: %d", port)
+		}
+
+		// 2. TODO: Trigger AnalyzeServer logic (Issue #22)
+		// 3. TODO: Format rich output (Issue #23)
 		
-		fmt.Println("⚠️ Logic not yet implemented. Check Milestone 01.")
+		fmt.Printf("[*] Target resolved: %s:%d\n", host, port)
+		fmt.Println("Logic for deep analysis (Issue #22) and rich UI (Issue #23) pending.")
+		return nil
 	},
 }
 
