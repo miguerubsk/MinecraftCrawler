@@ -25,6 +25,7 @@ func GetQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult, err
 	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
 		return nil, fmt.Errorf("failed to set deadline: %v", err)
 	}
+	defer conn.Close()
 
 	sessionId := int32(0x01010101 & 0x0F0F0F0F)
 	

@@ -20,6 +20,7 @@ Resuelve registros SRV, realiza Server List Ping (SLP)
 e intenta la extracción mediante protocolo UDP Query.`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		out := color.Output
 		target := args[0]
 
 		color.Cyan("[*] Analizando objetivo: %s\n", target)
@@ -68,28 +69,30 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		}
 
 		// Issue #23: UI alineada con el estilo del comando scan
-		sep := color.HiCyanString("\n" + strings.Repeat("━", 50))
+		sep    := color.HiCyanString("\n" + strings.Repeat("━", 50))
+		sepMid := color.HiCyanString(strings.Repeat("━", 50))
 		sepEnd := color.HiCyanString(strings.Repeat("━", 50) + "\n")
 
 		fmt.Println(sep)
 		fmt.Println(color.HiWhiteString("  ANÁLISIS DE SERVIDOR"))
-		fmt.Println(color.HiCyanString(strings.Repeat("━", 50)))
+		fmt.Println(sepMid)
 
 		if detail.MOTD != "" {
 			fmt.Printf("  %s\n", protocol.ColorizeMOTD(detail.MOTD))
 		}
 
-		fmt.Println(color.HiCyanString(strings.Repeat("━", 50)))
+		fmt.Println(sepMid)
 
-		fmt.Printf("  %-22s %s\n", "Servidor:",   color.HiYellowString("%s:%d", host, port))
-		fmt.Printf("  %-22s %s\n", "Versión:",    color.HiWhiteString(detail.VersionName))
-		fmt.Printf("  %-22s %s\n", "Protocolo:",  color.HiWhiteString("%d", detail.Protocol))
+		fmt.Printf("  %-22s %s\n", "Servidor:",  color.HiYellowString("%s:%d", host, port))
+		fmt.Printf("  %-22s %s\n", "Versión:",   color.HiWhiteString(detail.VersionName))
+		fmt.Printf("  %-22s %s\n", "Protocolo:", color.HiWhiteString("%d", detail.Protocol))
 
-		playersColor := color.HiGreenString
-		if detail.PlayersOnline == 0 {
-			playersColor = color.HiBlackString
+		playersStr := fmt.Sprintf("%d / %d", detail.PlayersOnline, detail.PlayersMax)
+		if detail.PlayersOnline > 0 {
+			fmt.Printf("  %-22s %s\n", "Jugadores:", color.HiGreenString(playersStr))
+		} else {
+			fmt.Printf("  %-22s %s\n", "Jugadores:", color.HiBlackString(playersStr))
 		}
-		fmt.Printf("  %-22s %s\n", "Jugadores:", playersColor("%d / %d", detail.PlayersOnline, detail.PlayersMax))
 
 		software := detail.Software
 		if software == "" {
@@ -102,7 +105,7 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		fmt.Printf("  %-22s %s\n", "Software:", color.HiWhiteString(software))
 		fmt.Printf("  %-22s %s\n", "Mapa:",     color.HiWhiteString(mapName))
 
-		fmt.Println(color.HiCyanString(strings.Repeat("━", 50)))
+		fmt.Println(sepMid)
 
 		if detail.IsWhitelist {
 			fmt.Printf("  %-22s %s\n", "Lista Blanca:", color.HiRedString("ACTIVADA"))
@@ -117,16 +120,16 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		}
 
 		if len(detail.Mods) > 0 {
-			fmt.Println(color.HiCyanString(strings.Repeat("━", 50)))
-			fmt.Printf("  %s\n", color.HiWhiteString("MODS (%d)", len(detail.Mods)))
+			fmt.Println(sepMid)
+			fmt.Println(color.HiWhiteString("  MODS (%d)", len(detail.Mods)))
 			for id, ver := range detail.Mods {
 				fmt.Printf("  [+] %-30s %s\n", color.HiGreenString(id), color.HiBlackString(ver))
 			}
 		}
 
 		if len(detail.Plugins) > 0 {
-			fmt.Println(color.HiCyanString(strings.Repeat("━", 50)))
-			fmt.Printf("  %s\n", color.HiWhiteString("PLUGINS (%d)", len(detail.Plugins)))
+			fmt.Println(sepMid)
+			fmt.Println(color.HiWhiteString("  PLUGINS (%d)", len(detail.Plugins)))
 			for _, pl := range detail.Plugins {
 				fmt.Printf("  [+] %s\n", color.HiGreenString(pl))
 			}

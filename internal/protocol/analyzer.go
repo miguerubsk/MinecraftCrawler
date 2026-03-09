@@ -83,7 +83,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	connLogin, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
 	if err == nil {
 		defer connLogin.Close()
-		_ = connLogin.SetDeadline(overallDeadline)
+		_ = connLogin.SetDeadline(time.Now().Add(timeout / 2))
 		_ = sendHandshake(connLogin, ip, port, detail.Protocol, 2)
 
 		ls := new(bytes.Buffer)
