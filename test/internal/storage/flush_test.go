@@ -13,11 +13,7 @@ const (
 )
 
 func TestFlushInsertsAndAssignsTimestampForZeroValue(t *testing.T) {
-	db, err := storage.NewDatabase(":memory:")
-	if err != nil {
-		t.Fatalf("failed to create in-memory database: %v", err)
-	}
-	defer db.Close()
+	db := newSingleConnTestDB(t)
 
 	batch := []*protocol.ServerDetail{
 		{
@@ -60,11 +56,7 @@ func TestFlushInsertsAndAssignsTimestampForZeroValue(t *testing.T) {
 }
 
 func TestFlushUpsertReplacesExistingServerByUniqueKey(t *testing.T) {
-	db, err := storage.NewDatabase(":memory:")
-	if err != nil {
-		t.Fatalf("failed to create in-memory database: %v", err)
-	}
-	defer db.Close()
+	db := newSingleConnTestDB(t)
 
 	first := []*protocol.ServerDetail{
 		{
