@@ -15,6 +15,7 @@ func TestScanFlags(t *testing.T) {
 		{"Port", "port", "25565"},
 		{"Workers", "workers", "1000"},
 		{"Verbose", "verbose", "0"},
+		{"Output", "output", "results.db"},
 	}
 
 	for _, tt := range tests {
