@@ -3,22 +3,40 @@ package storage_test
 import (
 	"MinecraftCrawler/internal/protocol"
 	"MinecraftCrawler/internal/storage"
+	"database/sql"
 	"testing"
 	"time"
 
 	_ "modernc.org/sqlite"
 )
 
-func TestNewDatabase_InMemory(t *testing.T) {
-	db, err := storage.NewDatabase(":memory:")
+const storageTestMemoryDSN = ":memory:"
+
+func newSingleConnTestDB(t *testing.T) *sql.DB {
+	t.Helper()
+
+	db, err := storage.NewDatabase(storageTestMemoryDSN)
 	if err != nil {
 		t.Fatalf("failed to create in-memory database: %v", err)
 	}
-	defer db.Close()
+
+	// With :memory:, a single DB connection avoids per-connection isolated state.
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+
+	t.Cleanup(func() {
+		_ = db.Close()
+	})
+
+	return db
+}
+
+func TestNewDatabaseInMemory(t *testing.T) {
+	db := newSingleConnTestDB(t)
 
 	// Verify table exists
 	var name string
-	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'").Scan(&name)
+	err := db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'").Scan(&name)
 	if err != nil {
 		t.Errorf("failed to find servers table: %v", err)
 	}
@@ -27,13 +45,9 @@ func TestNewDatabase_InMemory(t *testing.T) {
 	}
 }
 
-func TestStartSQLiteManager_InMemory(t *testing.T) {
+func TestStartSQLiteManagerInMemory(t *testing.T) {
 	// 1. Setup in-memory DB
-	db, err := storage.NewDatabase(":memory:")
-	if err != nil {
-		t.Fatalf("failed to create in-memory database: %v", err)
-	}
-	defer db.Close()
+	db := newSingleConnTestDB(t)
 
 	// 2. Setup channel and Start Manager
 	resultChan := make(chan *protocol.ServerDetail, 5)
@@ -71,7 +85,7 @@ func TestStartSQLiteManager_InMemory(t *testing.T) {
 
 	// 4. Verify data in DB
 	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM servers").Scan(&count)
+	err := db.QueryRow("SELECT COUNT(*) FROM servers").Scan(&count)
 	if err != nil {
 		t.Fatalf("Failed to count rows: %v", err)
 	}
