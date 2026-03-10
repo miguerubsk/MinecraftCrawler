@@ -22,6 +22,9 @@ func GetQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult, err
 	if err != nil {
 		return nil, err
 	}
+	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return nil, fmt.Errorf("failed to set deadline: %v", err)
+	}
 	defer conn.Close()
 
 	sessionId := int32(0x01010101 & 0x0F0F0F0F)
@@ -38,7 +41,7 @@ func GetQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult, err
 		return nil, fmt.Errorf("no query response")
 	}
 
-	tokenStr := string(resp[5 : n-1])
+	tokenStr := strings.TrimRight(string(resp[5:n]), "\x00")
 	var token int32
 	if _, err := fmt.Sscanf(tokenStr, "%d", &token); err != nil {
 		return nil, err
@@ -52,11 +55,11 @@ func GetQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult, err
 
 	_, _ = conn.Write(statReq.Bytes())
 	n, err = conn.Read(resp)
-	if err != nil || n < 11 {
+	if err != nil || n < 16 {
 		return nil, fmt.Errorf("stat request failed")
 	}
 
-	data := resp[11:n]
+	data := resp[16:n]
 	kvData := bytes.Split(data, []byte{0x00, 0x01, 0x70, 0x6c, 0x61, 0x79, 0x65, 0x72, 0x5f, 0x00, 0x00})
 	
 	kvPairs := make(map[string]string)

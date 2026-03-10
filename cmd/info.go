@@ -4,71 +4,153 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
+	"MinecraftCrawler/internal/protocol"
+
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
-	// TODO: Integrate colored console output (milestone 03) using github.com/fatih/color
 )
 
 var InfoCmd = &cobra.Command{
-	Use:   "info [target]",
-	Short: "Deep analysis of a single Minecraft server",
-	Long: `Performs a comprehensive analysis of a specific server.
-It resolves SRV records, performs Server List Ping (SLP), 
-and attempts UDP Query protocol extraction.`,
+	Use:   "info [objetivo]",
+	Short: "Análisis profundo de un servidor Minecraft",
+	Long: `Realiza un análisis exhaustivo de un servidor específico.
+Resuelve registros SRV, realiza Server List Ping (SLP)
+e intenta la extracción mediante protocolo UDP Query.`,
+	Example: `  mccrawler info mc.hypixel.net
+  mccrawler info 192.168.1.100:25565`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		PrintBanner()
 		target := args[0]
 
-		fmt.Printf("Analyzing target: %s\n", target)
+		color.Cyan("[*] Analizando objetivo: %s\n", target)
 
-		// 1. TODO: Implement SRV Resolution (Issue #21)
 		host := target
 		port := 25565
 
 		if h, p, err := net.SplitHostPort(target); err == nil {
 			host = h
 			if _, err := fmt.Sscanf(p, "%d", &port); err != nil {
-				return fmt.Errorf("invalid port in target: %v", err)
+				return fmt.Errorf("puerto inválido en el objetivo: %v", err)
 			}
 		} else {
-			// Comprobamos si es una IP literal (v4 o v6) antes de cualquier otra lógica
 			if net.ParseIP(target) != nil {
-				fmt.Printf("[*] IP address detected, skipping SRV lookup for %s\n", host)
+				color.Cyan("[*] IP detectada, omitiendo búsqueda SRV para %s\n", host)
 			} else {
-				// Si no es un IP válida y tiene varios ":", es un IPv6 mal formateado (le faltan los [])
 				if strings.Count(target, ":") > 1 {
-					return fmt.Errorf("malformed IPv6 address: use '[addr]:port' format for IPv6 with literal ports")
+					return fmt.Errorf("dirección IPv6 mal formateada: usa el formato '[addr]:port'")
 				}
 
-				// Intento de resolución SRV si no hay puerto explícito ni es IP
-				fmt.Printf("[*] No port specified, attempting SRV lookup for %s...\n", host)
+				color.Cyan("[*] Sin puerto especificado, buscando registro SRV para %s...\n", host)
 				_, addrs, err := net.LookupSRV("minecraft", "tcp", host)
 				if err == nil && len(addrs) > 0 {
 					host = strings.TrimSuffix(addrs[0].Target, ".")
 					port = int(addrs[0].Port)
-					fmt.Printf("SRV found: %s:%d\n", host, port)
+					color.HiGreen("[+] SRV encontrado: %s:%d\n", host, port)
 				} else if err != nil {
-					// Diferenciamos errores de DNS
 					if dnsErr, ok := err.(*net.DNSError); ok && dnsErr.IsNotFound {
-						fmt.Println("No SRV record found, using default port 25565")
+						color.HiYellow("[-] Sin registro SRV, usando puerto por defecto 25565\n")
 					} else {
-						return fmt.Errorf("DNS resolution error: %v", err)
+						return fmt.Errorf("error de resolución DNS: %v", err)
 					}
 				} else {
-					fmt.Println("No SRV record found, using default port 25565")
+					color.HiYellow("[-] Sin registro SRV, usando puerto por defecto 25565\n")
 				}
 			}
 		}
 
 		if port < 1 || port > 65535 {
-			return fmt.Errorf("port out of range: %d", port)
+			return fmt.Errorf("puerto fuera de rango: %d", port)
 		}
 
-		// 2. TODO: Trigger AnalyzeServer logic (Issue #22)
-		// 3. TODO: Format rich output (Issue #23)
+		detail, err := protocol.AnalyzeServer(host, port, 5*time.Second)
+		if err != nil {
+			return fmt.Errorf("análisis fallido: %v", err)
+		}
 
-		fmt.Printf("[*] Target resolved: %s:%d\n", host, port)
-		fmt.Println("Logic for deep analysis (Issue #22) and rich UI (Issue #23) pending.")
+		// Issue #23: UI alineada con el estilo del comando scan
+		const separatorWidth = 50
+		out := color.Output
+		sep    := color.HiCyanString("\n" + strings.Repeat("━", separatorWidth))
+		sepMid := color.HiCyanString(strings.Repeat("━", separatorWidth))
+		sepEnd := color.HiCyanString(strings.Repeat("━", separatorWidth) + "\n")
+
+		fmt.Fprintln(out, sep)
+		fmt.Fprintln(out, color.HiWhiteString("  ANÁLISIS DE SERVIDOR"))
+		fmt.Fprintln(out, sepMid)
+
+		if detail.MOTD != "" {
+			fmt.Fprintf(out, "  %s\n", protocol.ColorizeMOTD(detail.MOTD))
+			fmt.Fprintln(out, sepMid)
+		}
+
+		fmt.Fprintf(out, "  %-22s %s\n", "Servidor:",  color.HiYellowString("%s:%d", host, port))
+		fmt.Fprintf(out, "  %-22s %s\n", "Versión:",   color.HiWhiteString("%s", detail.VersionName))
+		fmt.Fprintf(out, "  %-22s %s\n", "Protocolo:", color.HiWhiteString("%d", detail.Protocol))
+
+		playersStr := fmt.Sprintf("%d / %d", detail.PlayersOnline, detail.PlayersMax)
+		if detail.PlayersOnline > 0 {
+			fmt.Fprintf(out, "  %-22s %s\n", "Jugadores:", color.HiGreenString("%s", playersStr))
+		} else {
+			fmt.Fprintf(out, "  %-22s %s\n", "Jugadores:", color.HiBlackString("%s", playersStr))
+		}
+
+		software := detail.Software
+		if software == "" {
+			software = "Desconocido"
+		}
+		mapName := detail.MapName
+		if mapName == "" {
+			mapName = "N/A"
+		}
+		fmt.Fprintf(out, "  %-22s %s\n", "Software:", color.HiWhiteString("%s", software))
+		fmt.Fprintf(out, "  %-22s %s\n", "Mapa:",     color.HiWhiteString("%s", mapName))
+
+		fmt.Fprintln(out, sepMid)
+
+		if detail.IsWhitelist {
+			fmt.Fprintf(out, "  %-22s %s\n", "Lista Blanca:", color.HiRedString("ACTIVADA"))
+		} else {
+			fmt.Fprintf(out, "  %-22s %s\n", "Lista Blanca:", color.HiBlackString("Desactivada"))
+		}
+		if detail.EnforcesSecureChat {
+			fmt.Fprintf(out, "  %-22s %s\n", "Chat Seguro:", color.HiYellowString("Obligatorio"))
+		}
+		if !detail.RconAttempted {
+			fmt.Fprintf(out, "  %-22s %s\n", "RCON:", color.HiBlackString("No intentado"))
+		} else if detail.RconOpen {
+			fmt.Fprintf(out, "  %-22s %s\n", "RCON:", color.HiRedString("ABIERTO"))
+		} else {
+			fmt.Fprintf(out, "  %-22s %s\n", "RCON:", color.HiYellowString("Cerrado"))
+		}
+
+		if !detail.QueryAttempted {
+			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiBlackString("No intentado"))
+		} else if detail.QueryError != nil {
+			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiBlackString("Inactivo"))
+		} else {
+			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiGreenString("CONECTADO"))
+		}
+
+		if len(detail.Mods) > 0 {
+			fmt.Fprintln(out, sepMid)
+			fmt.Fprintln(out, color.HiWhiteString("  MODS (%d)", len(detail.Mods)))
+			for id, ver := range detail.Mods {
+				fmt.Fprintf(out, "  [+] %-30s %s\n", color.HiGreenString("%s", id), color.HiBlackString("%s", ver))
+			}
+		}
+
+		if len(detail.Plugins) > 0 {
+			fmt.Fprintln(out, sepMid)
+			fmt.Fprintln(out, color.HiWhiteString("  PLUGINS (%d)", len(detail.Plugins)))
+			for _, pl := range detail.Plugins {
+				fmt.Fprintf(out, "  [+] %s\n", color.HiGreenString("%s", pl))
+			}
+		}
+
+		fmt.Fprintln(out, sepEnd)
 		return nil
 	},
 }
