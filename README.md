@@ -16,6 +16,15 @@
   </p>
 </div>
 
+```text
+___  ____                            __ _     _____                    _
+|  \/  (_)                          / _| |   /  __ \                  | |
+| .  . |_ _ __   ___  ___ _ __ __ _| |_| |_  | /  \/_ __ __ ___      _| | ___ _ __
+| |\/| | | '_ \ / _ \/ __| '__/ _` |  _| __| | |   | '__/ _` \ \ /\ / / |/ _ \ '__|
+| |  | | | | | |  __/ (__| | | (_| | | | |_  | \__/\ | | (_| |\ V  V /| |  __/ |
+\_|  |_/_|_| |_|\___|\___|_|  \__,_|_|  \__|  \____/_|  \__,_| \_/\_/ |_|\___|_|
+```
+
 [![build](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go-build.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go-build.yml)
 [![test](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go-test.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/go-test.yml)
 [![golangci-lint](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/lint.yml/badge.svg)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/lint.yml)
@@ -72,7 +81,7 @@ sudo ./mccrawler scan --range 1.1.0.0/16 --rate 5000 --workers 2000
 
 - Go: `1.24+`
 - OS: Linux, macOS, Windows
-- Architectures: `amd64`, `arm64`
+- Architectures: `amd64`, `arm64`, `arm32` (soon)
 - Scanner dependency: `masscan` (required for `scan`, not required for `info`)
 
 Built with:
