@@ -131,7 +131,7 @@ e intenta la extracción mediante protocolo UDP Query.`,
 			fmt.Fprintln(out, sepMid)
 			fmt.Fprintln(out, color.HiWhiteString("  MODS (%d)", len(detail.Mods)))
 			for id, ver := range detail.Mods {
-				fmt.Fprintf(out, "  [+] %-30s %s\n", color.HiGreenString(id), color.HiBlackString(ver))
+				fmt.Fprintf(out, "  [+] %-30s %s\n", color.HiGreenString("%s", id), color.HiBlackString("%s", ver))
 			}
 		}
 
@@ -139,7 +139,7 @@ e intenta la extracción mediante protocolo UDP Query.`,
 			fmt.Fprintln(out, sepMid)
 			fmt.Fprintln(out, color.HiWhiteString("  PLUGINS (%d)", len(detail.Plugins)))
 			for _, pl := range detail.Plugins {
-				fmt.Fprintf(out, "  [+] %s\n", color.HiGreenString(pl))
+				fmt.Fprintf(out, "  [+] %s\n", color.HiGreenString("%s", pl))
 			}
 		}
 

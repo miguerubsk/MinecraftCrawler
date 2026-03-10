@@ -40,12 +40,12 @@ func ColorizeMOTD(motd string) string {
 	for i := 0; i < len(runes); i++ {
 		if runes[i] == '§' && i+1 < len(runes) {
 			code := runes[i+1]
-			if color.NoColor {
-				// Strip color code completely if colors are disabled
-				i++ 
-				continue
-			}
 			if ansi, ok := MinecraftColorMap[code]; ok {
+				if color.NoColor {
+					// Solo eliminamos el código si es un código válido y estamos en modo sin color
+					i++ 
+					continue
+				}
 				result.WriteString(ansi)
 				hasColor = true
 				i++ // Saltamos el código de color
