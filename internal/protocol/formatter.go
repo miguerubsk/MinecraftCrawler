@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"strings"
+	"unicode"
 
 	"github.com/fatih/color"
 )
@@ -24,6 +25,7 @@ var MinecraftColorMap = map[rune]string{
 	'd': "\033[95m", // Rosa
 	'e': "\033[93m", // Amarillo
 	'f': "\033[97m", // Blanco
+	'k': "",         // Obfuscated: sin equivalente ANSI, se consume como no-op
 	'l': "\033[1m",  // Negrita
 	'm': "\033[9m",  // Tachado
 	'n': "\033[4m",  // Subrayado
@@ -39,7 +41,7 @@ func ColorizeMOTD(motd string) string {
 	
 	for i := 0; i < len(runes); i++ {
 		if runes[i] == '§' && i+1 < len(runes) {
-			code := runes[i+1]
+			code := unicode.ToLower(runes[i+1])
 			if ansi, ok := MinecraftColorMap[code]; ok {
 				if color.NoColor {
 					// Solo eliminamos el código si es un código válido y estamos en modo sin color
@@ -47,7 +49,9 @@ func ColorizeMOTD(motd string) string {
 					continue
 				}
 				result.WriteString(ansi)
-				hasColor = true
+				if ansi != "" {
+					hasColor = true
+				}
 				i++ // Saltamos el código de color
 				continue
 			}
