@@ -1,19 +1,18 @@
 <a id="readme-top"></a>
 
-<!-- PROJECT LOGO -->
 <br />
 <div align="center">
   <h3 align="center">MinecraftCrawler</h3>
 
   <p align="center">
-    An ultra-high performance Minecraft server crawler written in Go.
+    High-performance Minecraft server crawler and analyzer written in Go.
     <br />
     <br />
-    <a href="#usage">View Demo</a>
+    <a href="#quick-start">Quick Start</a>
     ·
-    <a href="#issues">Report Bug</a>
+    <a href="#usage">Usage</a>
     ·
-    <a href="#issues">Request Feature</a>
+    <a href="#troubleshooting">Troubleshooting</a>
   </p>
 </div>
 
@@ -22,133 +21,109 @@
 [![golangci-lint](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/lint.yml/badge.svg)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/lint.yml)
 [![CodeQL](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/codeql.yml/badge.svg?branch=master)](https://github.com/miguerubsk/MinecraftCrawler/actions/workflows/codeql.yml)
 
-<!-- TABLE OF CONTENTS -->
-<details>
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-  </ol>
-</details>
+## Table of Contents
 
-<!-- ABOUT THE PROJECT -->
+- [About](#about)
+- [Quick Start](#quick-start)
+- [Compatibility](#compatibility)
+- [Architecture](#architecture)
+- [Usage](#usage)
+- [Data Collected](#data-collected)
+- [Automated Releases](#automated-releases)
+- [Troubleshooting](#troubleshooting)
+- [Security and Responsible Use](#security-and-responsible-use)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
 
-## About The Project
+## About
 
-MinecraftCrawler is a tool designed to discover, analyze, and store Minecraft server information at a massive scale. It combines the port discovery speed of `masscan` with a highly concurrent protocol analyzer (SLP) written in Go.
+MinecraftCrawler discovers, analyzes, and stores Minecraft server metadata at scale. It combines `masscan` for fast host discovery with a concurrent protocol analyzer in Go.
 
-Key Features:
+Key features:
 
-- **Extreme Speed**: Pipeline architecture capable of processing thousands of servers per second.
-- **Efficiency**: Optimized use of goroutines and SQLite database with WAL mode for batch writing.
-- **Deep Analysis**: Extracts version, players, MOTD, mod list (Forge), plugins, map name, whitelist status, UDP Query status, and RCON probe status.
-- **Premium CLI**: Highly professional terminal interface with ASCII branding, color-coded output, and real-time feedback.
-- **Automatic Logging**: Every session is automatically recorded in `crawler.log` for later analysis.
+- Massive range scanning with worker-based analysis.
+- Deep single-target analysis (`info`) with SRV-aware resolution.
+- SLP + UDP Query extraction (version, players, software, plugins, map, MOTD).
+- RCON status probing and secure-chat/whitelist signal extraction when available.
+- SQLite persistence with WAL mode and schema migration support.
+- Colorized CLI output and automatic run logging (`crawler.log`).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Built With
+## Quick Start
 
-- [![Go](https://img.shields.io/badge/Go-%2300ADD8.svg?logo=go&logoColor=white)](https://go.dev/)
-- [![SQLite](https://img.shields.io/badge/SQLite-%2307405E.svg?logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-- [Masscan](https://github.com/robertdavidgraham/masscan)
-- [Cobra](https://github.com/spf13/cobra)
+```sh
+git clone https://github.com/miguerubsk/MinecraftCrawler.git
+cd MinecraftCrawler
+go build -o mccrawler main.go
+./mccrawler info mc.hypixel.net
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- GETTING STARTED -->
-
-## Getting Started
-
-To get a local copy up and running follow these simple steps.
-
-### Prerequisites
-
-You need to have Go and Masscan installed on your system (Linux/Windows/Mac).
-
-- **Masscan** (Debian/Ubuntu):
-
-  ```sh
-  sudo apt-get install masscan
-  ```
-
-- **Go** (1.24+):
-  Download it from [go.dev/dl](https://go.dev/dl/).
-
-### Installation
-
-1. Clone the repo
-   ```sh
-   git clone https://github.com/miguerubsk/MinecraftCrawler.git
-   ```
-2. Install Go dependencies
-   ```sh
-   go mod tidy
-   ```
-3. Build the binary
-   ```sh
-   go build -o mccrawler main.go
-   ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- USAGE EXAMPLES -->
-
-## Usage
-
-You can use either `scan` for large ranges or `info` for deep single-target analysis.
-
-### `scan` command
-
-You need administrator privileges to run `masscan` (network raw sockets).
-
-**Basic Example:** Scan a full IP range
+For mass range scanning (requires elevated privileges for `masscan` raw sockets):
 
 ```sh
 sudo ./mccrawler scan --range 1.1.0.0/16 --rate 5000 --workers 2000
 ```
 
-**Available Options:**
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-| Flag        | Shorthand | Description                                               | Default      |
-| ----------- | --------- | --------------------------------------------------------- | ------------ |
-| `--range`   | `-r`      | **Required**. CIDR range to scan (e.g., 1.1.1.0/24)       | `""`         |
-| `--rate`    | `-p`      | Packets per second (Masscan)                              | `1000`       |
-| `--port`    |           | Port to scan (25565 or 25575)                             | `25565`      |
-| `--workers` | `-w`      | Number of concurrent worker threads                       | `1000`       |
-| `--verbose` | `-v`      | Display found servers (limit lines, optional default 500) | `0`          |
-| `--exclude` |           | IP exclusion file                                         | `""`         |
-| `--output`  | `-o`      | Output database file                                      | `results.db` |
+## Compatibility
 
-_Check `mccrawler help` for more information. All execution logs are automatically saved to `crawler.log`. At the end of each scan, a statistical summary dashboard is displayed._
+- Go: `1.24+`
+- OS: Linux, macOS, Windows
+- Architectures: `amd64`, `arm64`
+- Scanner dependency: `masscan` (required for `scan`, not required for `info`)
+
+Built with:
+
+- [Go](https://go.dev/)
+- [SQLite](https://www.sqlite.org/)
+- [Masscan](https://github.com/robertdavidgraham/masscan)
+- [Cobra](https://github.com/spf13/cobra)
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Architecture
+
+Pipeline overview for large scans:
+
+```text
+masscan -> ipChan -> worker pool -> AnalyzeServer -> resultChan -> SQLite batch writer
+```
+
+High-level command responsibilities:
+
+- `scan`: discovers hosts in CIDR ranges, analyzes each host, batches persistence to SQLite.
+- `info`: deep analysis of one target with automatic host/port resolution and SRV lookup.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Usage
+
+### `scan` command
+
+Use `scan` for large CIDR ranges.
+
+```sh
+sudo ./mccrawler scan --range 1.1.0.0/16 --rate 5000 --workers 2000
+```
+
+Options:
+
+| Flag | Shorthand | Description | Default |
+| --- | --- | --- | --- |
+| `--range` | `-r` | Required CIDR range (e.g. `1.1.1.0/24`) | `""` |
+| `--rate` | `-p` | Packets per second for `masscan` | `1000` |
+| `--port` |  | Target port for scan/analyze | `25565` |
+| `--workers` | `-w` | Concurrent analysis workers | `1000` |
+| `--verbose` | `-v` | Show found servers in stdout (optional line limit; no-value defaults to `500`) | `0` |
+| `--exclude` |  | Exclusion file for IP ranges | `""` |
+| `--output` | `-o` | SQLite output file | `results.db` |
 
 ### `info` command
 
-Run an in-depth analysis for one target (domain/IP), including:
-
-- SRV auto-resolution (`_minecraft._tcp`)
-- Server List Ping (SLP)
-- UDP Query probe and parsing (software/plugins/map)
-- RCON status probe (`25575`)
-- Whitelist and secure chat signals when available
-
-Examples:
+Use `info` for deep single-target analysis.
 
 ```sh
 ./mccrawler info mc.hypixel.net
@@ -156,55 +131,152 @@ Examples:
 ./mccrawler info [2001:db8::1]:25565
 ```
 
-Note: `--output/-o` is a `scan`-only flag. It does not apply to `info`.
+What `info` does:
+
+- Resolves host and port from target input.
+- Tries `_minecraft._tcp` SRV for domain targets without explicit port.
+- Runs SLP, UDP Query probe, and RCON status probe (`25575`).
+- Prints enriched server details in a structured terminal report.
+
+Example output (abridged):
+
+```text
+[*] Analizando objetivo: mc.example.net
+[*] Sin puerto especificado, buscando registro SRV para mc.example.net...
+[+] SRV encontrado: play.example.net:25565
+
+  ANÁLISIS DE SERVIDOR
+  Servidor:              play.example.net:25565
+  Versión:               1.20.4
+  Jugadores:             12 / 200
+  Software:              Paper
+  Mapa:                  world
+  RCON:                  Cerrado
+  Query UDP:             CONECTADO
+```
+
+Note: `--output/-o` is intentionally `scan`-only and does not apply to `info`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- ROADMAP -->
+## Data Collected
+
+Primary fields collected during analysis:
+
+| Field | Source |
+| --- | --- |
+| `ip`, `port` | target resolution / scanner input |
+| `version_name`, `protocol` | SLP |
+| `players_online`, `players_max` | SLP |
+| `motd` | SLP |
+| `software`, `plugins`, `map_name` | UDP Query |
+| `whitelist` | login/disconnect signal inference |
+| `secure_chat` | SLP |
+| `rcon_open` | RCON probe |
+| `timestamp` | crawler runtime |
+
+Persisted in SQLite by `scan`: core server metadata, software, map, mods/plugins JSON, whitelist, secure_chat, timestamp.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Automated Releases
+
+Releases are automated through GitHub Actions (`release-please` + `goreleaser`).
+
+Current release target matrix:
+
+- OS: `linux`, `darwin`, `windows`
+- Arch: `amd64`, `arm64`
+- Archives:
+- `tar.gz` for Linux/macOS
+- `zip` for Windows
+
+Checksums are generated and signed in the release pipeline.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Troubleshooting
+
+Common issues and fixes:
+
+- `masscan` permission errors:
+- Run `scan` with elevated privileges (`sudo` on Linux/macOS).
+- `info` does not need raw-socket permissions.
+
+- SRV not found:
+- This is normal for many servers; crawler falls back to default port `25565`.
+
+- IPv6 target fails:
+- Use bracketed form when passing explicit port: `[2001:db8::1]:25565`.
+
+- `Query UDP: Inactivo`:
+- Server may have Query disabled or filtered by firewall.
+
+- `RCON: Cerrado`:
+- Expected for most servers unless RCON is intentionally exposed.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Security and Responsible Use
+
+This tool is for educational and authorized assessment use only.
+
+- Only scan infrastructure you own or explicitly have permission to test.
+- Follow applicable laws and organizational policies.
+- Avoid disruptive scan rates on sensitive networks.
+
+The authors are not responsible for misuse.
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Roadmap
 
+Completed:
+
 - [x] Massive scanning with Masscan
-- [x] SLP (Server List Ping) protocol analysis
-- [x] Whitelist and Mods detection
-- [x] Optimized SQLite storage
-- [x] RCON status probe support
-- [ ] Export to JSON/CSV format
-- [ ] Web dashboard for result visualization
-- [x] **Query Protocol (UDP)** support for software/plugins/map extraction
-- [ ] **GeoIP Integration** (Country/Flag detection)
-- [ ] **Webhook Notifications** (Discord/Slack support)
-- [ ] **Favicon Extraction** and local PNG storage
-- [ ] **CLI Search** command for quick result filtering
-- [ ] **RCON Password Auditing** module
-- [x] **Single Target Scan** (`info`) with auto-detect target resolution
+- [x] SLP protocol analysis
+- [x] UDP Query extraction (software/plugins/map)
+- [x] RCON status probe
+- [x] Single-target deep analysis (`info`)
+- [x] Optimized SQLite storage and migration-safe schema updates
+
+Planned:
+
+- [ ] Export to JSON/CSV
+- [ ] Web dashboard
+- [ ] GeoIP enrichment
+- [ ] Webhook notifications
+- [ ] Favicon extraction and local storage
+- [ ] Search/filter command over stored results
+- [ ] RCON password auditing module
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- CONTRIBUTING -->
 
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Contributions are welcome.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Local dev checks:
+
+```sh
+go test ./...
+```
+
+```sh
+golangci-lint run
+```
+
+Typical flow:
+
+1. Fork the project
+2. Create a branch (`git checkout -b feature/my-change`)
+3. Commit (`git commit -m "feat: ..."`)
+4. Push and open a Pull Request
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- LICENSE -->
 
 ## License
 
-Distributed under the GPL-3.0 License. See `LICENSE` for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Legal Disclaimer
-
-This tool is for educational purposes only. Unauthorized scanning of networks without permission can be illegal and unethical. Always ensure you have proper authorization before using this tool. The author is not responsible for its misuse or the consequences of scanning networks without authorization.
+Distributed under the GPL-3.0 License. See `LICENSE`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

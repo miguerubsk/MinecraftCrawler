@@ -11,6 +11,7 @@ builds:
     goarch:
       - amd64
       - arm64
+      - arm32
     main: ./main.go
     binary: mccrawler # Fuerza el nombre del ejecutable
 
@@ -25,7 +26,7 @@ archives:
       - LICENSE*
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 changelog:
   sort: asc
