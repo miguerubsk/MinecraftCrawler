@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"net"
 	"strings"
 	"time"
 
 	"MinecraftCrawler/internal/protocol"
+	"MinecraftCrawler/internal/resolver"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -27,43 +27,24 @@ e intenta la extracción mediante protocolo UDP Query.`,
 
 		color.Cyan("[*] Analizando objetivo: %s\n", target)
 
-		host := target
-		port := 25565
+		resolved, err := resolver.ResolveTarget(target, nil)
+		if err != nil {
+			return err
+		}
 
-		if h, p, err := net.SplitHostPort(target); err == nil {
-			host = h
-			if _, err := fmt.Sscanf(p, "%d", &port); err != nil {
-				return fmt.Errorf("puerto inválido en el objetivo: %v", err)
-			}
-		} else {
-			if net.ParseIP(target) != nil {
-				color.Cyan("[*] IP detectada, omitiendo búsqueda SRV para %s\n", host)
-			} else {
-				if strings.Count(target, ":") > 1 {
-					return fmt.Errorf("dirección IPv6 mal formateada: usa el formato '[addr]:port'")
-				}
-
-				color.Cyan("[*] Sin puerto especificado, buscando registro SRV para %s...\n", host)
-				_, addrs, err := net.LookupSRV("minecraft", "tcp", host)
-				if err == nil && len(addrs) > 0 {
-					host = strings.TrimSuffix(addrs[0].Target, ".")
-					port = int(addrs[0].Port)
-					color.HiGreen("[+] SRV encontrado: %s:%d\n", host, port)
-				} else if err != nil {
-					if dnsErr, ok := err.(*net.DNSError); ok && dnsErr.IsNotFound {
-						color.HiYellow("[-] Sin registro SRV, usando puerto por defecto 25565\n")
-					} else {
-						return fmt.Errorf("error de resolución DNS: %v", err)
-					}
-				} else {
-					color.HiYellow("[-] Sin registro SRV, usando puerto por defecto 25565\n")
-				}
+		if resolved.DirectIP {
+			color.Cyan("[*] IP detectada, omitiendo búsqueda SRV para %s\n", resolved.Host)
+		} else if resolved.SRVLookupAttempted {
+			color.Cyan("[*] Sin puerto especificado, buscando registro SRV para %s...\n", target)
+			if resolved.UsedSRV {
+				color.HiGreen("[+] SRV encontrado: %s:%d\n", resolved.Host, resolved.Port)
+			} else if resolved.SRVNotFound {
+				color.HiYellow("[-] Sin registro SRV, usando puerto por defecto 25565\n")
 			}
 		}
 
-		if port < 1 || port > 65535 {
-			return fmt.Errorf("puerto fuera de rango: %d", port)
-		}
+		host := resolved.Host
+		port := resolved.Port
 
 		detail, err := protocol.AnalyzeServer(host, port, 5*time.Second)
 		if err != nil {
