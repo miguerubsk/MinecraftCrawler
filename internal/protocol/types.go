@@ -22,6 +22,7 @@ type ServerDetail struct {
 	IsWhitelist        bool              `json:"whitelist"`
 	EnforcesSecureChat bool              `json:"secure_chat"`
 	RconOpen           bool              `json:"rcon_open"`
+	QueryError         error             `json:"-"`
 }
 
 func WriteVarInt(w io.Writer, value int) error {

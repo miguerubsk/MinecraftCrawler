@@ -121,6 +121,12 @@ e intenta la extracción mediante protocolo UDP Query.`,
 			fmt.Fprintf(out, "  %-22s %s\n", "RCON:", color.HiRedString("ABIERTO"))
 		}
 
+		if detail.QueryError != nil {
+			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiBlackString("Inactivo (%v)", detail.QueryError))
+		} else {
+			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiGreenString("CONECTADO"))
+		}
+
 		if len(detail.Mods) > 0 {
 			fmt.Fprintln(out, sepMid)
 			fmt.Fprintln(out, color.HiWhiteString("  MODS (%d)", len(detail.Mods)))

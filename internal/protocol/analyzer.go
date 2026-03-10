@@ -129,6 +129,8 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		if query.MapName != "" {
 			detail.MapName = query.MapName
 		}
+	} else {
+		detail.QueryError = err
 	}
 
 	return detail, nil
