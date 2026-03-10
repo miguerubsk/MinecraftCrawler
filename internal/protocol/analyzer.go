@@ -164,7 +164,9 @@ func GetServerStatus(host string, port int, timeout time.Duration) (*StatusRespo
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), timeout)
 	if err != nil { return nil, err }
 	defer conn.Close()
-	_ = conn.SetDeadline(time.Now().Add(timeout))
+	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		return nil, fmt.Errorf("failed to set deadline: %v", err)
+	}
 
 	_ = sendHandshake(conn, host, port, 763, 1)
 	sr := new(bytes.Buffer)

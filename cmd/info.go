@@ -71,28 +71,29 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		}
 
 		// Issue #23: UI alineada con el estilo del comando scan
+		out := color.Output
 		sep    := color.HiCyanString("\n" + strings.Repeat("━", 50))
 		sepMid := color.HiCyanString(strings.Repeat("━", 50))
 		sepEnd := color.HiCyanString(strings.Repeat("━", 50) + "\n")
 
-		fmt.Println(sep)
-		fmt.Println(color.HiWhiteString("  ANÁLISIS DE SERVIDOR"))
-		fmt.Println(sepMid)
+		fmt.Fprintln(out, sep)
+		fmt.Fprintln(out, color.HiWhiteString("  ANÁLISIS DE SERVIDOR"))
+		fmt.Fprintln(out, sepMid)
 
 		if detail.MOTD != "" {
-			fmt.Printf("  %s\n", protocol.ColorizeMOTD(detail.MOTD))
-			fmt.Println(sepMid)
+			fmt.Fprintf(out, "  %s\n", protocol.ColorizeMOTD(detail.MOTD))
+			fmt.Fprintln(out, sepMid)
 		}
 
-		fmt.Printf("  %-22s %s\n", "Servidor:",  color.HiYellowString("%s:%d", host, port))
-		fmt.Printf("  %-22s %s\n", "Versión:",   color.HiWhiteString(detail.VersionName))
-		fmt.Printf("  %-22s %s\n", "Protocolo:", color.HiWhiteString("%d", detail.Protocol))
+		fmt.Fprintf(out, "  %-22s %s\n", "Servidor:",  color.HiYellowString("%s:%d", host, port))
+		fmt.Fprintf(out, "  %-22s %s\n", "Versión:",   color.HiWhiteString(detail.VersionName))
+		fmt.Fprintf(out, "  %-22s %s\n", "Protocolo:", color.HiWhiteString("%d", detail.Protocol))
 
 		playersStr := fmt.Sprintf("%d / %d", detail.PlayersOnline, detail.PlayersMax)
 		if detail.PlayersOnline > 0 {
-			fmt.Printf("  %-22s %s\n", "Jugadores:", color.HiGreenString(playersStr))
+			fmt.Fprintf(out, "  %-22s %s\n", "Jugadores:", color.HiGreenString(playersStr))
 		} else {
-			fmt.Printf("  %-22s %s\n", "Jugadores:", color.HiBlackString(playersStr))
+			fmt.Fprintf(out, "  %-22s %s\n", "Jugadores:", color.HiBlackString(playersStr))
 		}
 
 		software := detail.Software
@@ -103,40 +104,40 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		if mapName == "" {
 			mapName = "N/A"
 		}
-		fmt.Printf("  %-22s %s\n", "Software:", color.HiWhiteString(software))
-		fmt.Printf("  %-22s %s\n", "Mapa:",     color.HiWhiteString(mapName))
+		fmt.Fprintf(out, "  %-22s %s\n", "Software:", color.HiWhiteString(software))
+		fmt.Fprintf(out, "  %-22s %s\n", "Mapa:",     color.HiWhiteString(mapName))
 
-		fmt.Println(sepMid)
+		fmt.Fprintln(out, sepMid)
 
 		if detail.IsWhitelist {
-			fmt.Printf("  %-22s %s\n", "Lista Blanca:", color.HiRedString("ACTIVADA"))
+			fmt.Fprintf(out, "  %-22s %s\n", "Lista Blanca:", color.HiRedString("ACTIVADA"))
 		} else {
-			fmt.Printf("  %-22s %s\n", "Lista Blanca:", color.HiBlackString("Desactivada"))
+			fmt.Fprintf(out, "  %-22s %s\n", "Lista Blanca:", color.HiBlackString("Desactivada"))
 		}
 		if detail.EnforcesSecureChat {
-			fmt.Printf("  %-22s %s\n", "Chat Seguro:", color.HiYellowString("Obligatorio"))
+			fmt.Fprintf(out, "  %-22s %s\n", "Chat Seguro:", color.HiYellowString("Obligatorio"))
 		}
 		if detail.RconOpen {
-			fmt.Printf("  %-22s %s\n", "RCON:", color.HiRedString("ABIERTO"))
+			fmt.Fprintf(out, "  %-22s %s\n", "RCON:", color.HiRedString("ABIERTO"))
 		}
 
 		if len(detail.Mods) > 0 {
-			fmt.Println(sepMid)
-			fmt.Println(color.HiWhiteString("  MODS (%d)", len(detail.Mods)))
+			fmt.Fprintln(out, sepMid)
+			fmt.Fprintln(out, color.HiWhiteString("  MODS (%d)", len(detail.Mods)))
 			for id, ver := range detail.Mods {
-				fmt.Printf("  [+] %-30s %s\n", color.HiGreenString(id), color.HiBlackString(ver))
+				fmt.Fprintf(out, "  [+] %-30s %s\n", color.HiGreenString(id), color.HiBlackString(ver))
 			}
 		}
 
 		if len(detail.Plugins) > 0 {
-			fmt.Println(sepMid)
-			fmt.Println(color.HiWhiteString("  PLUGINS (%d)", len(detail.Plugins)))
+			fmt.Fprintln(out, sepMid)
+			fmt.Fprintln(out, color.HiWhiteString("  PLUGINS (%d)", len(detail.Plugins)))
 			for _, pl := range detail.Plugins {
-				fmt.Printf("  [+] %s\n", color.HiGreenString(pl))
+				fmt.Fprintf(out, "  [+] %s\n", color.HiGreenString(pl))
 			}
 		}
 
-		fmt.Println(sepEnd)
+		fmt.Fprintln(out, sepEnd)
 		return nil
 	},
 }

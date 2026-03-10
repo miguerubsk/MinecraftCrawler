@@ -35,6 +35,7 @@ var MinecraftColorMap = map[rune]string{
 func ColorizeMOTD(motd string) string {
 	var result strings.Builder
 	runes := []rune(motd)
+	hasColor := false
 	
 	for i := 0; i < len(runes); i++ {
 		if runes[i] == '§' && i+1 < len(runes) {
@@ -46,6 +47,7 @@ func ColorizeMOTD(motd string) string {
 			}
 			if ansi, ok := MinecraftColorMap[code]; ok {
 				result.WriteString(ansi)
+				hasColor = true
 				i++ // Saltamos el código de color
 				continue
 			}
@@ -53,7 +55,7 @@ func ColorizeMOTD(motd string) string {
 		result.WriteRune(runes[i])
 	}
 	
-	if !color.NoColor {
+	if hasColor && !color.NoColor {
 		// Aseguramos que el color se resetee al final
 		result.WriteString("\033[0m")
 	}
