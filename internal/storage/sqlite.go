@@ -30,6 +30,7 @@ func NewDatabase(path string) (*sql.DB, error) {
 			players_max INTEGER,
 			whitelist BOOLEAN,
 			software TEXT,
+			map_name TEXT,
 			mods TEXT,
 			plugins TEXT,
 			secure_chat BOOLEAN,
@@ -71,8 +72,8 @@ func Flush(db *sql.DB, batch []*protocol.ServerDetail) error {
 	stmt, err := tx.Prepare(`
 		INSERT OR REPLACE INTO servers (
 			ip, port, version_name, protocol, players_online, players_max, 
-			whitelist, software, mods, plugins, secure_chat, timestamp
-		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+			whitelist, software, map_name, mods, plugins, secure_chat, timestamp
+		) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		_ = tx.Rollback()
 		return err
@@ -90,7 +91,7 @@ func Flush(db *sql.DB, batch []*protocol.ServerDetail) error {
 
 		_, err := stmt.Exec(
 			s.IP, s.Port, s.VersionName, s.Protocol, s.PlayersOnline, s.PlayersMax,
-			s.IsWhitelist, s.Software, string(modsJSON), string(pluginsJSON), 
+			s.IsWhitelist, s.Software, s.MapName, string(modsJSON), string(pluginsJSON), 
 			s.EnforcesSecureChat, ts,
 		)
 		if err != nil {

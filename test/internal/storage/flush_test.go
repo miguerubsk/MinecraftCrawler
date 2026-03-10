@@ -24,6 +24,7 @@ func TestFlushInsertsAndAssignsTimestampForZeroValue(t *testing.T) {
 			PlayersOnline: 4,
 			PlayersMax:    20,
 			Software:      "Paper",
+			MapName:       "world",
 			Mods:          map[string]string{"fabric-api": "0.100.0"},
 			Plugins:       []string{"EssentialsX", "LuckPerms"},
 			// Timestamp intentionally zero to validate fallback behavior.
@@ -44,7 +45,8 @@ func TestFlushInsertsAndAssignsTimestampForZeroValue(t *testing.T) {
 
 	var ts string
 	var software string
-	if err := db.QueryRow("SELECT timestamp, software FROM servers WHERE ip = ? AND port = ?", "127.0.0.10", 25565).Scan(&ts, &software); err != nil {
+	var mapName string
+	if err := db.QueryRow("SELECT timestamp, software, map_name FROM servers WHERE ip = ? AND port = ?", "127.0.0.10", 25565).Scan(&ts, &software, &mapName); err != nil {
 		t.Fatalf("failed to query inserted row: %v", err)
 	}
 	if ts == "" {
@@ -52,6 +54,9 @@ func TestFlushInsertsAndAssignsTimestampForZeroValue(t *testing.T) {
 	}
 	if software != "Paper" {
 		t.Fatalf("software = %q, want %q", software, "Paper")
+	}
+	if mapName != "world" {
+		t.Fatalf("map_name = %q, want %q", mapName, "world")
 	}
 }
 
@@ -82,6 +87,7 @@ func TestFlushUpsertReplacesExistingServerByUniqueKey(t *testing.T) {
 			PlayersOnline: 7,
 			PlayersMax:    50,
 			Software:      "Paper",
+			MapName:       "world_nether",
 			Mods:          map[string]string{"fabric-api": "0.100.1"},
 			Plugins:       []string{"LuckPerms"},
 			Timestamp:     time.Now(),
@@ -107,10 +113,11 @@ func TestFlushUpsertReplacesExistingServerByUniqueKey(t *testing.T) {
 	var protocolNum int
 	var players int
 	var software string
+	var mapName string
 	if err := db.QueryRow(
-		"SELECT version_name, protocol, players_online, software FROM servers WHERE ip = ? AND port = ?",
+		"SELECT version_name, protocol, players_online, software, map_name FROM servers WHERE ip = ? AND port = ?",
 		storageTestIPUpsert, 25565,
-	).Scan(&version, &protocolNum, &players, &software); err != nil {
+	).Scan(&version, &protocolNum, &players, &software, &mapName); err != nil {
 		t.Fatalf("failed to query upserted row: %v", err)
 	}
 
@@ -125,5 +132,8 @@ func TestFlushUpsertReplacesExistingServerByUniqueKey(t *testing.T) {
 	}
 	if software != "Paper" {
 		t.Fatalf("software = %q, want %q", software, "Paper")
+	}
+	if mapName != "world_nether" {
+		t.Fatalf("map_name = %q, want %q", mapName, "world_nether")
 	}
 }

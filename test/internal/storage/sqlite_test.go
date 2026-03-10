@@ -43,6 +43,15 @@ func TestNewDatabaseInMemory(t *testing.T) {
 	if name != "servers" {
 		t.Errorf("expected table name 'servers', got '%s'", name)
 	}
+
+	var mapNameColumn string
+	err = db.QueryRow("SELECT name FROM pragma_table_info('servers') WHERE name = 'map_name'").Scan(&mapNameColumn)
+	if err != nil {
+		t.Fatalf("failed to find map_name column: %v", err)
+	}
+	if mapNameColumn != "map_name" {
+		t.Fatalf("expected column map_name, got %s", mapNameColumn)
+	}
 }
 
 func TestStartSQLiteManagerInMemory(t *testing.T) {
