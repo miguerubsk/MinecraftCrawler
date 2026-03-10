@@ -91,9 +91,9 @@ e intenta la extracción mediante protocolo UDP Query.`,
 
 		playersStr := fmt.Sprintf("%d / %d", detail.PlayersOnline, detail.PlayersMax)
 		if detail.PlayersOnline > 0 {
-			fmt.Fprintf(out, "  %-22s %s\n", "Jugadores:", color.HiGreenString(playersStr))
+			fmt.Fprintf(out, "  %-22s %s\n", "Jugadores:", color.HiGreenString("%s", playersStr))
 		} else {
-			fmt.Fprintf(out, "  %-22s %s\n", "Jugadores:", color.HiBlackString(playersStr))
+			fmt.Fprintf(out, "  %-22s %s\n", "Jugadores:", color.HiBlackString("%s", playersStr))
 		}
 
 		software := detail.Software
