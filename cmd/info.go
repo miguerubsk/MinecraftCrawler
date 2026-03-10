@@ -71,10 +71,11 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		}
 
 		// Issue #23: UI alineada con el estilo del comando scan
+		const separatorWidth = 50
 		out := color.Output
-		sep    := color.HiCyanString("\n" + strings.Repeat("━", 50))
-		sepMid := color.HiCyanString(strings.Repeat("━", 50))
-		sepEnd := color.HiCyanString(strings.Repeat("━", 50) + "\n")
+		sep    := color.HiCyanString("\n" + strings.Repeat("━", separatorWidth))
+		sepMid := color.HiCyanString(strings.Repeat("━", separatorWidth))
+		sepEnd := color.HiCyanString(strings.Repeat("━", separatorWidth) + "\n")
 
 		fmt.Fprintln(out, sep)
 		fmt.Fprintln(out, color.HiWhiteString("  ANÁLISIS DE SERVIDOR"))
@@ -122,7 +123,7 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		}
 
 		if detail.QueryError != nil {
-			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiBlackString("Inactivo (%v)", detail.QueryError))
+			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiBlackString("Inactivo"))
 		} else {
 			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiGreenString("CONECTADO"))
 		}

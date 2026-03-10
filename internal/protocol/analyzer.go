@@ -165,10 +165,11 @@ func analyzeRcon(detail *ServerDetail, timeout time.Duration) (*ServerDetail, er
 func GetServerStatus(host string, port int, timeout time.Duration) (*StatusResponse, error) {
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), timeout)
 	if err != nil { return nil, err }
-	defer conn.Close()
 	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		conn.Close()
 		return nil, fmt.Errorf("failed to set deadline: %v", err)
 	}
+	defer conn.Close()
 
 	_ = sendHandshake(conn, host, port, 763, 1)
 	sr := new(bytes.Buffer)
