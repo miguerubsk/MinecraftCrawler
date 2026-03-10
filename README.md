@@ -57,7 +57,7 @@ Key Features:
 
 - **Extreme Speed**: Pipeline architecture capable of processing thousands of servers per second.
 - **Efficiency**: Optimized use of goroutines and SQLite database with WAL mode for batch writing.
-- **Deep Analysis**: Extracts version, players, MOTD, mod list (Forge), plugins, and checks for whitelist status.
+- **Deep Analysis**: Extracts version, players, MOTD, mod list (Forge), plugins, map name, whitelist status, UDP Query status, and RCON probe status.
 - **Premium CLI**: Highly professional terminal interface with ASCII branding, color-coded output, and real-time feedback.
 - **Automatic Logging**: Every session is automatically recorded in `crawler.log` for later analysis.
 
@@ -88,7 +88,7 @@ You need to have Go and Masscan installed on your system (Linux/Windows/Mac).
   sudo apt-get install masscan
   ```
 
-- **Go** (1.20+):
+- **Go** (1.24+):
   Download it from [go.dev/dl](https://go.dev/dl/).
 
 ### Installation
@@ -112,7 +112,11 @@ You need to have Go and Masscan installed on your system (Linux/Windows/Mac).
 
 ## Usage
 
-The main command is `scan`. You need administrator privileges to run `masscan` (network raw sockets).
+You can use either `scan` for large ranges or `info` for deep single-target analysis.
+
+### `scan` command
+
+You need administrator privileges to run `masscan` (network raw sockets).
 
 **Basic Example:** Scan a full IP range
 
@@ -134,6 +138,26 @@ sudo ./mccrawler scan --range 1.1.0.0/16 --rate 5000 --workers 2000
 
 _Check `mccrawler help` for more information. All execution logs are automatically saved to `crawler.log`. At the end of each scan, a statistical summary dashboard is displayed._
 
+### `info` command
+
+Run an in-depth analysis for one target (domain/IP), including:
+
+- SRV auto-resolution (`_minecraft._tcp`)
+- Server List Ping (SLP)
+- UDP Query probe and parsing (software/plugins/map)
+- RCON status probe (`25575`)
+- Whitelist and secure chat signals when available
+
+Examples:
+
+```sh
+./mccrawler info mc.hypixel.net
+./mccrawler info 192.168.1.100:25565
+./mccrawler info [2001:db8::1]:25565
+```
+
+Note: `--output/-o` is a `scan`-only flag. It does not apply to `info`.
+
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
@@ -144,16 +168,16 @@ _Check `mccrawler help` for more information. All execution logs are automatical
 - [x] SLP (Server List Ping) protocol analysis
 - [x] Whitelist and Mods detection
 - [x] Optimized SQLite storage
-- [ ] RCON scanning support
+- [x] RCON status probe support
 - [ ] Export to JSON/CSV format
 - [ ] Web dashboard for result visualization
-- [ ] **Query Protocol (UDP)** support for detailed Player/Plugin info
+- [x] **Query Protocol (UDP)** support for software/plugins/map extraction
 - [ ] **GeoIP Integration** (Country/Flag detection)
 - [ ] **Webhook Notifications** (Discord/Slack support)
 - [ ] **Favicon Extraction** and local PNG storage
 - [ ] **CLI Search** command for quick result filtering
 - [ ] **RCON Password Auditing** module
-- [ ] **Single Target Scan** (IP/Domain) with auto-detect logic
+- [x] **Single Target Scan** (`info`) with auto-detect target resolution
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
