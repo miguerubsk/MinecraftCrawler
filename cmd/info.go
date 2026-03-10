@@ -87,7 +87,7 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		}
 
 		fmt.Fprintf(out, "  %-22s %s\n", "Servidor:",  color.HiYellowString("%s:%d", host, port))
-		fmt.Fprintf(out, "  %-22s %s\n", "Versión:",   color.HiWhiteString(detail.VersionName))
+		fmt.Fprintf(out, "  %-22s %s\n", "Versión:",   color.HiWhiteString("%s", detail.VersionName))
 		fmt.Fprintf(out, "  %-22s %s\n", "Protocolo:", color.HiWhiteString("%d", detail.Protocol))
 
 		playersStr := fmt.Sprintf("%d / %d", detail.PlayersOnline, detail.PlayersMax)
@@ -105,8 +105,8 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		if mapName == "" {
 			mapName = "N/A"
 		}
-		fmt.Fprintf(out, "  %-22s %s\n", "Software:", color.HiWhiteString(software))
-		fmt.Fprintf(out, "  %-22s %s\n", "Mapa:",     color.HiWhiteString(mapName))
+		fmt.Fprintf(out, "  %-22s %s\n", "Software:", color.HiWhiteString("%s", software))
+		fmt.Fprintf(out, "  %-22s %s\n", "Mapa:",     color.HiWhiteString("%s", mapName))
 
 		fmt.Fprintln(out, sepMid)
 
