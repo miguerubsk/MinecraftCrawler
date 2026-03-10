@@ -52,10 +52,6 @@ func Execute() {
 	}
 }
 
-func init() {
-	rootCmd.PersistentFlags().StringVarP(&dbPath, "output", "o", "results.db", "Archivo SQLite de salida")
-}
-
 var rootHelpTemplate = `{{banner}}
 {{if .Long}}{{.Long}}{{else}}{{.Short}}{{end}}
 

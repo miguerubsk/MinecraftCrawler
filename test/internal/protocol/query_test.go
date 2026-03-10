@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func TestGetQueryInfo_Mock(t *testing.T) {
+func TestGetQueryInfoMock(t *testing.T) {
 	// Simple mock UDP server to test the handshake and STAT request logic
 	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
 	if err != nil {
@@ -44,7 +44,7 @@ func TestGetQueryInfo_Mock(t *testing.T) {
 		statResp := new(bytes.Buffer)
 		statResp.Write([]byte{0x00})          // Type: Stat
 		statResp.Write(buf[3:7])              // Session ID
-		statResp.Write([]byte("padding00"))   // 11 bytes header total including type and session id
+		statResp.Write([]byte("splitnum\x00\x80\x00")) // 11-byte query padding per protocol
 
 		// KV data
 		statResp.WriteString("hostname")
@@ -79,5 +79,8 @@ func TestGetQueryInfo_Mock(t *testing.T) {
 	}
 	if res.MapName != "world" {
 		t.Errorf("expected map world, got %s", res.MapName)
+	}
+	if res.RawKV["hostname"] != "A Minecraft Server" {
+		t.Errorf("expected hostname A Minecraft Server, got %s", res.RawKV["hostname"])
 	}
 }

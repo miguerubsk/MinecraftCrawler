@@ -20,6 +20,9 @@ func TestInfoCommandStructure(t *testing.T) {
 	if cmd.InfoCmd.Args == nil {
 		t.Error("Command Args validator is nil")
 	}
+	if cmd.InfoCmd.InheritedFlags().Lookup("output") != nil {
+		t.Error("info command should not inherit output flag")
+	}
 }
 
 func TestInfoCommandArgsValidation(t *testing.T) {
