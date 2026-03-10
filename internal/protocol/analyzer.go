@@ -120,6 +120,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		}
 	}
 
+	detail.QueryAttempted = true
 	query, err := GetQueryInfo(ip, port, 2*time.Second)
 	if err == nil {
 		detail.Plugins = query.Plugins
@@ -133,13 +134,30 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		detail.QueryError = err
 	}
 
+	// Probe RCON on its default port as an additional best-effort signal.
+	detail.RconAttempted = true
+	if err := probeRcon(ip, 25575, timeout/2); err == nil {
+		detail.RconOpen = true
+	}
+
 	return detail, nil
 }
 
 func analyzeRcon(detail *ServerDetail, timeout time.Duration) (*ServerDetail, error) {
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", detail.IP, detail.Port), timeout)
-	if err != nil {
+	detail.RconAttempted = true
+	if err := probeRcon(detail.IP, detail.Port, timeout); err != nil {
 		return nil, err
+	}
+
+	detail.RconOpen = true
+	detail.Software = "RCON Service"
+	return detail, nil
+}
+
+func probeRcon(ip string, port int, timeout time.Duration) error {
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
+	if err != nil {
+		return err
 	}
 	defer conn.Close()
 
@@ -153,13 +171,7 @@ func analyzeRcon(detail *ServerDetail, timeout time.Duration) (*ServerDetail, er
 
 	_ = conn.SetDeadline(time.Now().Add(timeout))
 	_, err = conn.Write(packet.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	detail.RconOpen = true
-	detail.Software = "RCON Service"
-	return detail, nil
+	return err
 }
 
 func GetServerStatus(host string, port int, timeout time.Duration) (*StatusResponse, error) {

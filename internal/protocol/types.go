@@ -21,7 +21,9 @@ type ServerDetail struct {
 	Plugins            []string          `json:"plugins"`
 	IsWhitelist        bool              `json:"whitelist"`
 	EnforcesSecureChat bool              `json:"secure_chat"`
+	RconAttempted      bool              `json:"rcon_attempted"`
 	RconOpen           bool              `json:"rcon_open"`
+	QueryAttempted     bool              `json:"query_attempted"`
 	QueryError         error             `json:"-"`
 }
 

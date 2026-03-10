@@ -118,11 +118,17 @@ e intenta la extracción mediante protocolo UDP Query.`,
 		if detail.EnforcesSecureChat {
 			fmt.Fprintf(out, "  %-22s %s\n", "Chat Seguro:", color.HiYellowString("Obligatorio"))
 		}
-		if detail.RconOpen {
+		if !detail.RconAttempted {
+			fmt.Fprintf(out, "  %-22s %s\n", "RCON:", color.HiBlackString("No intentado"))
+		} else if detail.RconOpen {
 			fmt.Fprintf(out, "  %-22s %s\n", "RCON:", color.HiRedString("ABIERTO"))
+		} else {
+			fmt.Fprintf(out, "  %-22s %s\n", "RCON:", color.HiYellowString("Cerrado"))
 		}
 
-		if detail.QueryError != nil {
+		if !detail.QueryAttempted {
+			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiBlackString("No intentado"))
+		} else if detail.QueryError != nil {
 			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiBlackString("Inactivo"))
 		} else {
 			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiGreenString("CONECTADO"))
