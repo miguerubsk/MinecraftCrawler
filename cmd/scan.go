@@ -118,19 +118,21 @@ var ScanCmd = &cobra.Command{
 }
 
 func showSummary(total int32, duration time.Duration, db string, out io.Writer) {
+	const summaryLineFmt = "  %-20s %s\n"
+
 	fmt.Fprintf(out, "%s\n", color.HiCyanString("\n"+strings.Repeat("━", 50)))
 	fmt.Fprintf(out, "%s\n", color.HiWhiteString("  RESUMEN DEL ESCANEO"))
 	fmt.Fprintf(out, "%s\n", color.HiCyanString(strings.Repeat("━", 50)))
 	
-	fmt.Fprintf(out, "  %-20s %s\n", "Total Encontrados:", color.HiGreenString("%d", total))
-	fmt.Fprintf(out, "  %-20s %s\n", "Tiempo Total:", color.HiWhiteString("%s", duration.Round(time.Second)))
+	fmt.Fprintf(out, summaryLineFmt, "Total Encontrados:", color.HiGreenString("%d", total))
+	fmt.Fprintf(out, summaryLineFmt, "Tiempo Total:", color.HiWhiteString("%s", duration.Round(time.Second)))
 	
 	if duration.Seconds() > 0 {
 		avg := float64(total) / duration.Minutes()
 		fmt.Fprintf(out, "  %-20s %s/min\n", "Velocidad Media:", color.HiWhiteString("%.2f", avg))
 	}
 	
-	fmt.Fprintf(out, "  %-20s %s\n", "Base de Datos:", color.HiYellowString(db))
+	fmt.Fprintf(out, summaryLineFmt, "Base de Datos:", color.HiYellowString(db))
 	fmt.Fprintf(out, "%s\n", color.HiCyanString(strings.Repeat("━", 50)+"\n"))
 }
 
@@ -142,6 +144,7 @@ func init() {
 	ScanCmd.Flags().IntVarP(&verbose, "verbose", "v", 0, "Muestra detalles de cada servidor encontrado (opcional: límite de líneas, default 500)")
 	ScanCmd.Flags().Lookup("verbose").NoOptDefVal = "500"
 	ScanCmd.Flags().StringVar(&excludeFile, "exclude", "", "Archivo de exclusiones (rangos de IP a evitar)")
+	ScanCmd.Flags().StringVarP(&dbPath, "output", "o", "results.db", "Archivo SQLite de salida")
 	
 	if err := ScanCmd.MarkFlagRequired("range"); err != nil {
     	log.Fatalf("error configurando flags: %v", err)

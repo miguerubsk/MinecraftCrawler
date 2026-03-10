@@ -16,11 +16,15 @@ type ServerDetail struct {
 	PlayersOnline      int               `json:"players_online"`
 	PlayersMax         int               `json:"players_max"`
 	Software           string            `json:"software"`
+	MapName            string            `json:"map_name"`
 	Mods               map[string]string `json:"mods"`
 	Plugins            []string          `json:"plugins"`
 	IsWhitelist        bool              `json:"whitelist"`
 	EnforcesSecureChat bool              `json:"secure_chat"`
+	RconAttempted      bool              `json:"rcon_attempted"`
 	RconOpen           bool              `json:"rcon_open"`
+	QueryAttempted     bool              `json:"query_attempted"`
+	QueryError         error             `json:"-"`
 }
 
 func WriteVarInt(w io.Writer, value int) error {

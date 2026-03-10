@@ -67,6 +67,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	detail.PlayersMax = status.Players.Max
 	detail.PlayersOnline = status.Players.Online
 	detail.EnforcesSecureChat = status.EnforcesSecureChat
+	detail.MOTD = parseMOTD(status.Description)
 
 	if status.Favicon != "" {
 		b64 := strings.TrimPrefix(status.Favicon, "data:image/png;base64,")
@@ -81,6 +82,7 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	connLogin, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
 	if err == nil {
 		defer connLogin.Close()
+		_ = connLogin.SetDeadline(time.Now().Add(timeout / 2))
 		_ = sendHandshake(connLogin, ip, port, detail.Protocol, 2)
 
 		ls := new(bytes.Buffer)
@@ -118,21 +120,44 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		}
 	}
 
+	detail.QueryAttempted = true
 	query, err := GetQueryInfo(ip, port, 2*time.Second)
 	if err == nil {
 		detail.Plugins = query.Plugins
 		if query.Software != "" {
 			detail.Software = query.Software
 		}
+		if query.MapName != "" {
+			detail.MapName = query.MapName
+		}
+	} else {
+		detail.QueryError = err
+	}
+
+	// Probe RCON on its default port as an additional best-effort signal.
+	detail.RconAttempted = true
+	if err := probeRcon(ip, 25575, timeout/2); err == nil {
+		detail.RconOpen = true
 	}
 
 	return detail, nil
 }
 
 func analyzeRcon(detail *ServerDetail, timeout time.Duration) (*ServerDetail, error) {
-	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", detail.IP, detail.Port), timeout)
-	if err != nil {
+	detail.RconAttempted = true
+	if err := probeRcon(detail.IP, detail.Port, timeout); err != nil {
 		return nil, err
+	}
+
+	detail.RconOpen = true
+	detail.Software = "RCON Service"
+	return detail, nil
+}
+
+func probeRcon(ip string, port int, timeout time.Duration) error {
+	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
+	if err != nil {
+		return err
 	}
 	defer conn.Close()
 
@@ -146,18 +171,16 @@ func analyzeRcon(detail *ServerDetail, timeout time.Duration) (*ServerDetail, er
 
 	_ = conn.SetDeadline(time.Now().Add(timeout))
 	_, err = conn.Write(packet.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	detail.RconOpen = true
-	detail.Software = "RCON Service"
-	return detail, nil
+	return err
 }
 
 func GetServerStatus(host string, port int, timeout time.Duration) (*StatusResponse, error) {
 	conn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", host, port), timeout)
 	if err != nil { return nil, err }
+	if err := conn.SetDeadline(time.Now().Add(timeout)); err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("failed to set deadline: %v", err)
+	}
 	defer conn.Close()
 
 	_ = sendHandshake(conn, host, port, 763, 1)
@@ -196,4 +219,28 @@ func ReadVarIntSafe(r io.Reader) (int, error) {
 		if shift > 35 { return 0, fmt.Errorf("varint too big") }
 	}
 	return value, nil
+}
+
+func parseMOTD(desc interface{}) string {
+	if s, ok := desc.(string); ok {
+		return s
+	}
+	if m, ok := desc.(map[string]interface{}); ok {
+		var fullText strings.Builder
+		if t, ok := m["text"].(string); ok {
+			fullText.WriteString(t)
+		}
+		if extra, ok := m["extra"].([]interface{}); ok {
+			for _, part := range extra {
+				if partMap, ok := part.(map[string]interface{}); ok {
+					// Llama recursivamente para componentes anidados
+					fullText.WriteString(parseMOTD(partMap))
+				} else if partStr, ok := part.(string); ok {
+					fullText.WriteString(partStr)
+				}
+			}
+		}
+		return fullText.String()
+	}
+	return ""
 }

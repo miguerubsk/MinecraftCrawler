@@ -3,37 +3,61 @@ package storage_test
 import (
 	"MinecraftCrawler/internal/protocol"
 	"MinecraftCrawler/internal/storage"
+	"database/sql"
+	"path/filepath"
 	"testing"
 	"time"
 
 	_ "modernc.org/sqlite"
 )
 
-func TestNewDatabase_InMemory(t *testing.T) {
-	db, err := storage.NewDatabase(":memory:")
+const storageTestMemoryDSN = ":memory:"
+
+func newSingleConnTestDB(t *testing.T) *sql.DB {
+	t.Helper()
+
+	db, err := storage.NewDatabase(storageTestMemoryDSN)
 	if err != nil {
 		t.Fatalf("failed to create in-memory database: %v", err)
 	}
-	defer db.Close()
+
+	// With :memory:, a single DB connection avoids per-connection isolated state.
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+
+	t.Cleanup(func() {
+		_ = db.Close()
+	})
+
+	return db
+}
+
+func TestNewDatabaseInMemory(t *testing.T) {
+	db := newSingleConnTestDB(t)
 
 	// Verify table exists
 	var name string
-	err = db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'").Scan(&name)
+	err := db.QueryRow("SELECT name FROM sqlite_master WHERE type='table' AND name='servers'").Scan(&name)
 	if err != nil {
 		t.Errorf("failed to find servers table: %v", err)
 	}
 	if name != "servers" {
 		t.Errorf("expected table name 'servers', got '%s'", name)
 	}
+
+	var mapNameColumn string
+	err = db.QueryRow("SELECT name FROM pragma_table_info('servers') WHERE name = 'map_name'").Scan(&mapNameColumn)
+	if err != nil {
+		t.Fatalf("failed to find map_name column: %v", err)
+	}
+	if mapNameColumn != "map_name" {
+		t.Fatalf("expected column map_name, got %s", mapNameColumn)
+	}
 }
 
-func TestStartSQLiteManager_InMemory(t *testing.T) {
+func TestStartSQLiteManagerInMemory(t *testing.T) {
 	// 1. Setup in-memory DB
-	db, err := storage.NewDatabase(":memory:")
-	if err != nil {
-		t.Fatalf("failed to create in-memory database: %v", err)
-	}
-	defer db.Close()
+	db := newSingleConnTestDB(t)
 
 	// 2. Setup channel and Start Manager
 	resultChan := make(chan *protocol.ServerDetail, 5)
@@ -71,7 +95,7 @@ func TestStartSQLiteManager_InMemory(t *testing.T) {
 
 	// 4. Verify data in DB
 	var count int
-	err = db.QueryRow("SELECT COUNT(*) FROM servers").Scan(&count)
+	err := db.QueryRow("SELECT COUNT(*) FROM servers").Scan(&count)
 	if err != nil {
 		t.Fatalf("Failed to count rows: %v", err)
 	}
@@ -91,6 +115,52 @@ func TestStartSQLiteManager_InMemory(t *testing.T) {
 	}
 	if storedPort != testServer.Port {
 		t.Errorf("Expected Port %d, got %d", testServer.Port, storedPort)
+	}
+}
+
+func TestNewDatabaseMigratesMapNameOnExistingSchema(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "legacy.db")
+
+	legacyDB, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("failed to open legacy test db: %v", err)
+	}
+
+	legacySchema := `
+		CREATE TABLE servers (
+			ip TEXT,
+			port INTEGER,
+			version_name TEXT,
+			protocol INTEGER,
+			players_online INTEGER,
+			players_max INTEGER,
+			whitelist BOOLEAN,
+			software TEXT,
+			mods TEXT,
+			plugins TEXT,
+			secure_chat BOOLEAN,
+			timestamp DATETIME,
+			UNIQUE(ip, port)
+		);`
+	if _, err := legacyDB.Exec(legacySchema); err != nil {
+		_ = legacyDB.Close()
+		t.Fatalf("failed to create legacy schema: %v", err)
+	}
+	_ = legacyDB.Close()
+
+	migratedDB, err := storage.NewDatabase(dbPath)
+	if err != nil {
+		t.Fatalf("NewDatabase() migration error = %v", err)
+	}
+	defer migratedDB.Close()
+
+	var mapNameColumn string
+	err = migratedDB.QueryRow("SELECT name FROM pragma_table_info('servers') WHERE name = 'map_name'").Scan(&mapNameColumn)
+	if err != nil {
+		t.Fatalf("failed to find migrated map_name column: %v", err)
+	}
+	if mapNameColumn != "map_name" {
+		t.Fatalf("expected migrated column map_name, got %s", mapNameColumn)
 	}
 }
 
