@@ -216,9 +216,8 @@ func parseMOTD(desc interface{}) string {
 		if extra, ok := m["extra"].([]interface{}); ok {
 			for _, part := range extra {
 				if partMap, ok := part.(map[string]interface{}); ok {
-					if partText, ok := partMap["text"].(string); ok {
-						fullText.WriteString(partText)
-					}
+					// Llama recursivamente para componentes anidados
+					fullText.WriteString(parseMOTD(partMap))
 				} else if partStr, ok := part.(string); ok {
 					fullText.WriteString(partStr)
 				}

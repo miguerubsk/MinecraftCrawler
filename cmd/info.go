@@ -81,9 +81,8 @@ e intenta la extracción mediante protocolo UDP Query.`,
 
 		if detail.MOTD != "" {
 			fmt.Printf("  %s\n", protocol.ColorizeMOTD(detail.MOTD))
+			fmt.Println(sepMid)
 		}
-
-		fmt.Println(sepMid)
 
 		fmt.Printf("  %-22s %s\n", "Servidor:",  color.HiYellowString("%s:%d", host, port))
 		fmt.Printf("  %-22s %s\n", "Versión:",   color.HiWhiteString(detail.VersionName))

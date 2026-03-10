@@ -2,6 +2,8 @@ package protocol
 
 import (
 	"strings"
+
+	"github.com/fatih/color"
 )
 
 // MinecraftColorMap mapea los códigos § a secuencias ANSI básicas
@@ -37,6 +39,11 @@ func ColorizeMOTD(motd string) string {
 	for i := 0; i < len(runes); i++ {
 		if runes[i] == '§' && i+1 < len(runes) {
 			code := runes[i+1]
+			if color.NoColor {
+				// Strip color code completely if colors are disabled
+				i++ 
+				continue
+			}
 			if ansi, ok := MinecraftColorMap[code]; ok {
 				result.WriteString(ansi)
 				i++ // Saltamos el código de color
@@ -46,7 +53,9 @@ func ColorizeMOTD(motd string) string {
 		result.WriteRune(runes[i])
 	}
 	
-	// Aseguramos que el color se resetee al final
-	result.WriteString("\033[0m")
+	if !color.NoColor {
+		// Aseguramos que el color se resetee al final
+		result.WriteString("\033[0m")
+	}
 	return result.String()
 }
