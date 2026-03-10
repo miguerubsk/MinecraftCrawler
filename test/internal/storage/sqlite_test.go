@@ -4,6 +4,7 @@ import (
 	"MinecraftCrawler/internal/protocol"
 	"MinecraftCrawler/internal/storage"
 	"database/sql"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -114,6 +115,52 @@ func TestStartSQLiteManagerInMemory(t *testing.T) {
 	}
 	if storedPort != testServer.Port {
 		t.Errorf("Expected Port %d, got %d", testServer.Port, storedPort)
+	}
+}
+
+func TestNewDatabaseMigratesMapNameOnExistingSchema(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "legacy.db")
+
+	legacyDB, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		t.Fatalf("failed to open legacy test db: %v", err)
+	}
+
+	legacySchema := `
+		CREATE TABLE servers (
+			ip TEXT,
+			port INTEGER,
+			version_name TEXT,
+			protocol INTEGER,
+			players_online INTEGER,
+			players_max INTEGER,
+			whitelist BOOLEAN,
+			software TEXT,
+			mods TEXT,
+			plugins TEXT,
+			secure_chat BOOLEAN,
+			timestamp DATETIME,
+			UNIQUE(ip, port)
+		);`
+	if _, err := legacyDB.Exec(legacySchema); err != nil {
+		_ = legacyDB.Close()
+		t.Fatalf("failed to create legacy schema: %v", err)
+	}
+	_ = legacyDB.Close()
+
+	migratedDB, err := storage.NewDatabase(dbPath)
+	if err != nil {
+		t.Fatalf("NewDatabase() migration error = %v", err)
+	}
+	defer migratedDB.Close()
+
+	var mapNameColumn string
+	err = migratedDB.QueryRow("SELECT name FROM pragma_table_info('servers') WHERE name = 'map_name'").Scan(&mapNameColumn)
+	if err != nil {
+		t.Fatalf("failed to find migrated map_name column: %v", err)
+	}
+	if mapNameColumn != "map_name" {
+		t.Fatalf("expected migrated column map_name, got %s", mapNameColumn)
 	}
 }
 

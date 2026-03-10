@@ -4,6 +4,7 @@ import (
 	"MinecraftCrawler/internal/protocol"
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
 	"time"
 
@@ -41,7 +42,42 @@ func NewDatabase(path string) (*sql.DB, error) {
 	if _, err := db.Exec(query); err != nil {
 		return nil, err
 	}
+
+	if err := ensureServersColumn(db, "map_name", "TEXT"); err != nil {
+		return nil, err
+	}
 	return db, nil
+}
+
+func ensureServersColumn(db *sql.DB, columnName string, columnType string) error {
+	rows, err := db.Query("PRAGMA table_info(servers)")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var cid int
+		var name string
+		var ctype string
+		var notNull int
+		var defaultValue sql.NullString
+		var pk int
+		if err := rows.Scan(&cid, &name, &ctype, &notNull, &defaultValue, &pk); err != nil {
+			return err
+		}
+		if name == columnName {
+			return nil
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	query := fmt.Sprintf("ALTER TABLE servers ADD COLUMN %s %s", columnName, columnType)
+	_, err = db.Exec(query)
+	return err
 }
 
 // Renombramos a StartSQLiteManager para evitar colisión con buffer.go
