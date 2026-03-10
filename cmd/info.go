@@ -13,13 +13,16 @@ import (
 )
 
 var InfoCmd = &cobra.Command{
-	Use:   "info [target]",
+	Use:   "info [objetivo]",
 	Short: "Análisis profundo de un servidor Minecraft",
 	Long: `Realiza un análisis exhaustivo de un servidor específico.
 Resuelve registros SRV, realiza Server List Ping (SLP)
 e intenta la extracción mediante protocolo UDP Query.`,
+	Example: `  mccrawler info mc.hypixel.net
+  mccrawler info 192.168.1.100:25565`,
 	Args: cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		PrintBanner()
 		target := args[0]
 
 		color.Cyan("[*] Analizando objetivo: %s\n", target)
