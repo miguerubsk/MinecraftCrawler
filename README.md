@@ -195,7 +195,7 @@ Releases are automated through GitHub Actions (`release-please` + `goreleaser`).
 Current release target matrix:
 
 - OS: `linux`, `darwin`, `windows`
-- Arch: `amd64`, `arm64`
+- Arch: `amd64`, `arm64`, `arm32` (soon)
 - Archives:
 - `tar.gz` for Linux/macOS
 - `zip` for Windows
@@ -248,6 +248,10 @@ Completed:
 - [x] RCON status probe
 - [x] Single-target deep analysis (`info`)
 - [x] Optimized SQLite storage and migration-safe schema updates
+
+In progress:
+
+- [ ] Internationalization
 
 Planned:
 

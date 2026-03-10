@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"MinecraftCrawler/internal/i18n"
 	"MinecraftCrawler/internal/protocol"
 	"MinecraftCrawler/internal/scanner"
 	"MinecraftCrawler/internal/storage"
@@ -39,7 +40,7 @@ var ScanCmd = &cobra.Command{
 		// 1. Configurar Logger dual (Archivo + Consola)
 		logFile, err := os.OpenFile("crawler.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
-			color.Red("Error al crear archivo de log: %v", err)
+			color.Red(i18n.T("scan.logfile_error"), err)
 			return
 		}
 		defer logFile.Close()
@@ -86,7 +87,7 @@ var ScanCmd = &cobra.Command{
 								timestamp, detail.IP, detail.VersionName, detail.PlayersOnline, detail.PlayersMax, detail.IsWhitelist)
 						} else if verbose > 0 && int(count) == verbose + 1 {
 							fmt.Print("\r\033[K")
-							color.New(color.FgHiYellow).Printf("[*] Límite de %d logs alcanzado. Continuando escaneo silencioso en base de datos...\n", verbose)
+							color.New(color.FgHiYellow).Printf(i18n.T("scan.verbose.limit"), verbose)
 						}
 						
 						resultChan <- detail
@@ -96,11 +97,11 @@ var ScanCmd = &cobra.Command{
 		}
 
 		// 5. Ejecutar Masscan
-		color.Cyan("[*] Iniciando escaneo en %s (Puerto: %d, Workers: %d, Rate: %s)\n", ipRange, port, workers, rate)
+		color.Cyan(i18n.T("scan.start"), ipRange, port, workers, rate)
 		
 		err = scanner.Run(ipRange, rate, port, excludeFile, ipChan)
 		if err != nil {
-			color.Red("Error ejecutando Masscan: %v\n", err)
+			color.Red(i18n.T("scan.masscan_error"), err)
 			os.Exit(1)
 		}
 
@@ -121,18 +122,18 @@ func showSummary(total int32, duration time.Duration, db string, out io.Writer) 
 	const summaryLineFmt = "  %-20s %s\n"
 
 	fmt.Fprintf(out, "%s\n", color.HiCyanString("\n"+strings.Repeat("━", 50)))
-	fmt.Fprintf(out, "%s\n", color.HiWhiteString("  RESUMEN DEL ESCANEO"))
+	fmt.Fprintf(out, "%s\n", color.HiWhiteString(i18n.T("scan.summary.title")))
 	fmt.Fprintf(out, "%s\n", color.HiCyanString(strings.Repeat("━", 50)))
 	
-	fmt.Fprintf(out, summaryLineFmt, "Total Encontrados:", color.HiGreenString("%d", total))
-	fmt.Fprintf(out, summaryLineFmt, "Tiempo Total:", color.HiWhiteString("%s", duration.Round(time.Second)))
+	fmt.Fprintf(out, summaryLineFmt, i18n.T("scan.summary.total"), color.HiGreenString("%d", total))
+	fmt.Fprintf(out, summaryLineFmt, i18n.T("scan.summary.duration"), color.HiWhiteString("%s", duration.Round(time.Second)))
 	
 	if duration.Seconds() > 0 {
 		avg := float64(total) / duration.Minutes()
-		fmt.Fprintf(out, "  %-20s %s/min\n", "Velocidad Media:", color.HiWhiteString("%.2f", avg))
+		fmt.Fprintf(out, "  %-20s %s/min\n", i18n.T("scan.summary.speed"), color.HiWhiteString("%.2f", avg))
 	}
 	
-	fmt.Fprintf(out, summaryLineFmt, "Base de Datos:", color.HiYellowString(db))
+	fmt.Fprintf(out, summaryLineFmt, i18n.T("scan.summary.database"), color.HiYellowString(db))
 	fmt.Fprintf(out, "%s\n", color.HiCyanString(strings.Repeat("━", 50)+"\n"))
 }
 

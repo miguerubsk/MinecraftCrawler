@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"MinecraftCrawler/internal/i18n"
 	"github.com/spf13/cobra"
 	"github.com/fatih/color"
 	"os"
@@ -9,6 +10,7 @@ import (
 )
 
 var dbPath  string
+var language string
 
 var banner = `
 ___  ____                            __ _     _____                    _           
@@ -23,6 +25,9 @@ var rootCmd = &cobra.Command{
 	Use:   "mccrawler",
 	Short: color.CyanString("Un crawler de Minecraft ultra eficiente"),
 	Long:  "Escanea y analiza servidores de Minecraft a gran escala usando Masscan y Go.",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		i18n.Init(language)
+	},
 }
 
 func PrintBanner() {
@@ -47,9 +52,14 @@ func Execute() {
 	rootCmd.SetHelpTemplate(rootHelpTemplate)
 	
 	if err := rootCmd.Execute(); err != nil {
-		fmt.Println(color.RedString("Error: %v", err))
+		fmt.Println(color.RedString(i18n.T("error.prefix"), err))
 		os.Exit(1)
 	}
+}
+
+func init() {
+	i18n.Init("auto")
+	rootCmd.PersistentFlags().StringVar(&language, "lang", "auto", "Language for CLI output (auto|es|en)")
 }
 
 var rootHelpTemplate = `{{banner}}
