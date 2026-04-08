@@ -27,15 +27,15 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: "1.24"
           cache: true
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Cache CodeQL database
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.codeql_databases
           key: ${{ runner.os }}-codeql-${{ github.sha }}

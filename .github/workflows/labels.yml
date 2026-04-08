@@ -16,7 +16,7 @@ jobs:
       issues: write
     steps:
       - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
       - name: 🚀 Run Label Syncer
         uses: micnncim/action-label-syncer@v1.2.0
         env:

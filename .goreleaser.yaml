@@ -11,21 +11,22 @@ builds:
     goarch:
       - amd64
       - arm64
+      - arm32
     main: ./main.go
     binary: mccrawler # Fuerza el nombre del ejecutable
 
 archives:
   - name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
-    format: tar.gz
+    formats: tar.gz
     format_overrides:
       - goos: windows
-        format: zip
+        formats: zip
     files:
       - README*
       - LICENSE*
 
 checksum:
-  name_template: 'checksums.txt'
+  name_template: "checksums.txt"
 
 changelog:
   sort: asc
