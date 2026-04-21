@@ -8,8 +8,6 @@ import (
 	"net"
 	"strings"
 	"time"
-
-	"github.com/fatih/color"
 )
 
 type QueryResult struct {
