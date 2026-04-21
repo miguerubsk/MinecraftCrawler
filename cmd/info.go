@@ -113,6 +113,12 @@ e intenta la extracción mediante protocolo UDP Query.`,
 			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiBlackString("Inactivo"))
 		} else {
 			fmt.Fprintf(out, "  %-22s %s\n", "Query UDP:", color.HiGreenString("CONECTADO"))
+			if detail.QueryHostName != "" {
+				fmt.Fprintf(out, "  %-22s %s\n", "  Host:", color.HiWhiteString("%s", detail.QueryHostName))
+			}
+			if detail.QueryHostPort > 0 && detail.QueryHostPort != port {
+				fmt.Fprintf(out, "  %-22s %s\n", "  Port (Interno):", color.HiWhiteString("%d", detail.QueryHostPort))
+			}
 		}
 
 		if len(detail.Mods) > 0 {

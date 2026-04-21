@@ -130,6 +130,15 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 		if query.MapName != "" {
 			detail.MapName = query.MapName
 		}
+		if detail.MOTD == "" && query.MOTD != "" {
+			detail.MOTD = query.MOTD
+		}
+		if detail.PlayersMax == 0 && query.PlayersMax > 0 {
+			detail.PlayersOnline = query.PlayersOnline
+			detail.PlayersMax = query.PlayersMax
+		}
+		detail.QueryHostName = query.HostName
+		detail.QueryHostPort = query.HostPort
 	} else {
 		detail.QueryError = err
 	}
