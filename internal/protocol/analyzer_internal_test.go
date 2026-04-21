@@ -138,4 +138,3 @@ func TestAnalyzeServerRconPortPath(t *testing.T) {
 	if detail.Port != 25575 {
 		t.Fatalf("Port = %d, want 25575", detail.Port)
 	}
-}

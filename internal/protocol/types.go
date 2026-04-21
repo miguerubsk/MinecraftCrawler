@@ -24,6 +24,8 @@ type ServerDetail struct {
 	RconAttempted      bool              `json:"rcon_attempted"`
 	RconOpen           bool              `json:"rcon_open"`
 	QueryAttempted     bool              `json:"query_attempted"`
+	QueryHostName      string            `json:"query_host_name"`
+	QueryHostPort      int               `json:"query_host_port"`
 	QueryError         error             `json:"-"`
 }
 
