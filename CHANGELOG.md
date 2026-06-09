@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0](https://github.com/miguerubsk/MinecraftCrawler/compare/v0.3.0...v0.4.0) (2026-06-09)
+
+
+### Features
+
+* implement basic query protocol stat and robust fallback logic ([ab56e96](https://github.com/miguerubsk/MinecraftCrawler/commit/ab56e961213a310ba5b5838a70790e1493c95af3))
+* implement basic query protocol stat and robust fallback logic ([55b1498](https://github.com/miguerubsk/MinecraftCrawler/commit/55b149896711438dc593e2c02015739b587f39d6)), closes [#31](https://github.com/miguerubsk/MinecraftCrawler/issues/31)
+
+
+### Bug Fixes
+
+* **analyzer:** make server analysis best-effort and fix linting ([31b839b](https://github.com/miguerubsk/MinecraftCrawler/commit/31b839bf6da12b2b4fafdbf631bcc6d52a48a729)), closes [#31](https://github.com/miguerubsk/MinecraftCrawler/issues/31)
+* **query:** check fmt.Sscanf return values in basic stat ([77d36a2](https://github.com/miguerubsk/MinecraftCrawler/commit/77d36a255e0b266cda1ed36d773a649cf29b6381)), closes [#31](https://github.com/miguerubsk/MinecraftCrawler/issues/31)
+* **query:** improve basic stat validation and fix test syntax ([e39de35](https://github.com/miguerubsk/MinecraftCrawler/commit/e39de358af5f59a225c81b736f15f43bc1230fa7)), closes [#31](https://github.com/miguerubsk/MinecraftCrawler/issues/31)
+
 ## [0.3.0](https://github.com/miguerubsk/MinecraftCrawler/compare/v0.2.0...v0.3.0) (2026-03-10)
 
 
