@@ -81,7 +81,7 @@ sudo ./mccrawler scan --range 1.1.0.0/16 --rate 5000 --workers 2000
 
 - Go: `1.24+`
 - OS: Linux, macOS, Windows
-- Architectures: `amd64`, `arm64`, `arm32` (soon)
+- Architectures: `amd64`, `arm64`, `arm`
 - Scanner dependency: `masscan` (required for `scan`, not required for `info`)
 
 Built with:
@@ -147,21 +147,21 @@ What `info` does:
 - Runs SLP, UDP Query probe, and RCON status probe (`25575`).
 - Prints enriched server details in a structured terminal report.
 
-Example output (abridged):
+Example output:
 
 ```text
-[*] Analizando objetivo: mc.example.net
-[*] Sin puerto especificado, buscando registro SRV para mc.example.net...
-[+] SRV encontrado: play.example.net:25565
+[*] Analyzing target: mc.example.net
+[*] No port specified, looking up SRV record for mc.example.net...
+[+] SRV found: play.example.net:25565
 
-  ANÁLISIS DE SERVIDOR
-  Servidor:              play.example.net:25565
-  Versión:               1.20.4
-  Jugadores:             12 / 200
+  SERVER ANALYSIS
+  Server:                play.example.net:25565
+  Version:               1.20.4
+  Players:               12 / 200
   Software:              Paper
-  Mapa:                  world
-  RCON:                  Cerrado
-  Query UDP:             CONECTADO
+  Map:                   world
+  RCON:                  Closed
+  UDP Query:             CONNECTED
 ```
 
 Note: `--output/-o` is intentionally `scan`-only and does not apply to `info`.
@@ -195,10 +195,10 @@ Releases are automated through GitHub Actions (`release-please` + `goreleaser`).
 Current release target matrix:
 
 - OS: `linux`, `darwin`, `windows`
-- Arch: `amd64`, `arm64`
+- Arch: `amd64`, `arm64`, `arm`
 - Archives:
-- `tar.gz` for Linux/macOS
-- `zip` for Windows
+  - `tar.gz` for Linux/macOS
+  - `zip` for Windows
 
 Checksums are generated and signed in the release pipeline.
 
@@ -209,20 +209,16 @@ Checksums are generated and signed in the release pipeline.
 Common issues and fixes:
 
 - `masscan` permission errors:
-- Run `scan` with elevated privileges (`sudo` on Linux/macOS).
-- `info` does not need raw-socket permissions.
-
+  - Run `scan` with elevated privileges (`sudo` on Linux/macOS).
+  - `info` does not need raw-socket permissions.
 - SRV not found:
-- This is normal for many servers; crawler falls back to default port `25565`.
-
+  - This is normal for many servers; crawler falls back to default port `25565`.
 - IPv6 target fails:
-- Use bracketed form when passing explicit port: `[2001:db8::1]:25565`.
-
+  - Use bracketed form when passing explicit port: `[2001:db8::1]:25565`.
 - `Query UDP: Inactivo`:
-- Server may have Query disabled or filtered by firewall.
-
+  - Server may have Query disabled or filtered by firewall.
 - `RCON: Cerrado`:
-- Expected for most servers unless RCON is intentionally exposed.
+  - Expected for most servers unless RCON is intentionally exposed.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

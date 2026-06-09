@@ -162,7 +162,7 @@ func GetBasicQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult
 	
 	resp := make([]byte, 1024)
 	n, err := conn.Read(resp)
-	if err != nil || n < 5 {
+	if err != nil || n < 16 {
 		return nil, fmt.Errorf("basic stat request failed")
 	}
 
