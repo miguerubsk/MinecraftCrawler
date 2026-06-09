@@ -179,8 +179,8 @@ func GetBasicQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult
 	
 	numPlayers, _ := readNullTerminatedString(reader)
 	maxPlayers, _ := readNullTerminatedString(reader)
-	fmt.Sscanf(numPlayers, "%d", &res.PlayersOnline)
-	fmt.Sscanf(maxPlayers, "%d", &res.PlayersMax)
+	_, _ = fmt.Sscanf(numPlayers, "%d", &res.PlayersOnline)
+	_, _ = fmt.Sscanf(maxPlayers, "%d", &res.PlayersMax)
 
 	var hostPort uint16
 	_ = binary.Read(reader, binary.LittleEndian, &hostPort)
