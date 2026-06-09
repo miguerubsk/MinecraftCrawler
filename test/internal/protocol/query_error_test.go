@@ -80,11 +80,11 @@ func TestGetQueryInfoShortStatResponse(t *testing.T) {
 
 	go func() {
 		buf := make([]byte, 2048)
+		
+		// 1. First attempt (Full Query)
 		// Handshake request
 		n, clientAddr, err := pc.ReadFrom(buf)
-		if err != nil || n < 7 {
-			return
-		}
+		if err != nil || n < 7 { return }
 
 		handshakeResp := make([]byte, 0, 32)
 		handshakeResp = append(handshakeResp, 0x09)
@@ -93,12 +93,20 @@ func TestGetQueryInfoShortStatResponse(t *testing.T) {
 		handshakeResp = append(handshakeResp, 0x00)
 		_, _ = pc.WriteTo(handshakeResp, clientAddr)
 
-		// Stat request
+		// Stat request (will fail)
 		_, clientAddr, err = pc.ReadFrom(buf)
-		if err != nil {
-			return
-		}
-		// < 16 bytes forces "stat request failed"
+		if err != nil { return }
+		_, _ = pc.WriteTo([]byte{0x00, 0x01, 0x02, 0x03, 0x04}, clientAddr)
+
+		// 2. Second attempt (Basic Query fallback)
+		// Handshake request
+		_, clientAddr, err = pc.ReadFrom(buf)
+		if err != nil { return }
+		_, _ = pc.WriteTo(handshakeResp, clientAddr)
+
+		// Stat request (will fail)
+		_, clientAddr, err = pc.ReadFrom(buf)
+		if err != nil { return }
 		_, _ = pc.WriteTo([]byte{0x00, 0x01, 0x02, 0x03, 0x04}, clientAddr)
 	}()
 
