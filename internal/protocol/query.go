@@ -118,9 +118,9 @@ func GetFullQueryInfo(ip string, port int, timeout time.Duration) (*QueryResult,
 		Plugins:  []string{},
 	}
 
-	fmt.Sscanf(kvPairs["numplayers"], "%d", &res.PlayersOnline)
-	fmt.Sscanf(kvPairs["maxplayers"], "%d", &res.PlayersMax)
-	fmt.Sscanf(kvPairs["hostport"], "%d", &res.HostPort)
+	_, _ = fmt.Sscanf(kvPairs["numplayers"], "%d", &res.PlayersOnline)
+	_, _ = fmt.Sscanf(kvPairs["maxplayers"], "%d", &res.PlayersMax)
+	_, _ = fmt.Sscanf(kvPairs["hostport"], "%d", &res.HostPort)
 
 	if p, ok := kvPairs["plugins"]; ok {
 		pParts := strings.Split(p, ":")

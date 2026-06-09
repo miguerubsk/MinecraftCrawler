@@ -58,62 +58,60 @@ func AnalyzeServer(ip string, port int, timeout time.Duration) (*ServerDetail, e
 	}
 
 	status, err := GetServerStatus(ip, port, timeout)
-	if err != nil {
-		return nil, err
-	}
-
-	detail.VersionName = status.Version.Name
-	detail.Protocol = status.Version.Protocol
-	detail.PlayersMax = status.Players.Max
-	detail.PlayersOnline = status.Players.Online
-	detail.EnforcesSecureChat = status.EnforcesSecureChat
-	detail.MOTD = parseMOTD(status.Description)
-
-	if status.Favicon != "" {
-		b64 := strings.TrimPrefix(status.Favicon, "data:image/png;base64,")
-		img, _ := base64.StdEncoding.DecodeString(b64)
-		detail.Icon = img
-	}
-
-	for _, m := range status.ForgeData.Mods {
-		detail.Mods[m.ModID] = m.Version
-	}
-
-	connLogin, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
 	if err == nil {
-		defer connLogin.Close()
-		_ = connLogin.SetDeadline(time.Now().Add(timeout / 2))
-		_ = sendHandshake(connLogin, ip, port, detail.Protocol, 2)
+		detail.VersionName = status.Version.Name
+		detail.Protocol = status.Version.Protocol
+		detail.PlayersMax = status.Players.Max
+		detail.PlayersOnline = status.Players.Online
+		detail.EnforcesSecureChat = status.EnforcesSecureChat
+		detail.MOTD = parseMOTD(status.Description)
 
-		ls := new(bytes.Buffer)
-		_ = WriteVarInt(ls, 0x00)
-		username := "GeminiCrawler"
-		_ = WriteVarInt(ls, len(username))
-		_, _ = ls.WriteString(username)
-		
-		uuid := []byte{0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF}
-		if detail.Protocol >= 764 {
-			_, _ = ls.Write(uuid)
-		} else if detail.Protocol >= 759 {
-			_ = ls.WriteByte(0x01)
-			_, _ = ls.Write(uuid)
+		if status.Favicon != "" {
+			b64 := strings.TrimPrefix(status.Favicon, "data:image/png;base64,")
+			img, _ := base64.StdEncoding.DecodeString(b64)
+			detail.Icon = img
 		}
 
-		frame := new(bytes.Buffer)
-		_ = WriteVarInt(frame, ls.Len())
-		_, _ = frame.Write(ls.Bytes())
-		_, err = connLogin.Write(frame.Bytes()) // Error checked
+		for _, m := range status.ForgeData.Mods {
+			detail.Mods[m.ModID] = m.Version
+		}
+
+		connLogin, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%d", ip, port), timeout)
 		if err == nil {
-			_, err = ReadVarInt(connLogin)
+			defer connLogin.Close()
+			_ = connLogin.SetDeadline(time.Now().Add(timeout / 2))
+			_ = sendHandshake(connLogin, ip, port, detail.Protocol, 2)
+
+			ls := new(bytes.Buffer)
+			_ = WriteVarInt(ls, 0x00)
+			username := "GeminiCrawler"
+			_ = WriteVarInt(ls, len(username))
+			_, _ = ls.WriteString(username)
+			
+			uuid := []byte{0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF, 0xDE, 0xAD, 0xBE, 0xEF}
+			if detail.Protocol >= 764 {
+				_, _ = ls.Write(uuid)
+			} else if detail.Protocol >= 759 {
+				_ = ls.WriteByte(0x01)
+				_, _ = ls.Write(uuid)
+			}
+
+			frame := new(bytes.Buffer)
+			_ = WriteVarInt(frame, ls.Len())
+			_, _ = frame.Write(ls.Bytes())
+			_, err = connLogin.Write(frame.Bytes()) // Error checked
 			if err == nil {
-				pID, _ := ReadVarInt(connLogin)
-				if pID == 0x00 {
-					rLen, _ := ReadVarInt(connLogin)
-					reason := make([]byte, rLen)
-					_, _ = io.ReadFull(connLogin, reason) // Silenced explicitly
-					msg := strings.ToLower(string(reason))
-					if strings.Contains(msg, "whitelist") || strings.Contains(msg, "not on the list") {
-						detail.IsWhitelist = true
+				_, err = ReadVarInt(connLogin)
+				if err == nil {
+					pID, _ := ReadVarInt(connLogin)
+					if pID == 0x00 {
+						rLen, _ := ReadVarInt(connLogin)
+						reason := make([]byte, rLen)
+						_, _ = io.ReadFull(connLogin, reason) // Silenced explicitly
+						msg := strings.ToLower(string(reason))
+						if strings.Contains(msg, "whitelist") || strings.Contains(msg, "not on the list") {
+							detail.IsWhitelist = true
+						}
 					}
 				}
 			}

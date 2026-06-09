@@ -12,10 +12,15 @@ const (
 )
 
 func TestAnalyzeServerTimeout(t *testing.T) {
-	// Use an unroutable IP for timeout test
-	_, err := AnalyzeServer("192.0.2.1", 25565, 100*time.Millisecond)
-	if err == nil {
-		t.Fatal("AnalyzeServer() error = nil, want timeout error")
+	// Use an unroutable IP for timeout test.
+	// In best-effort mode, AnalyzeServer returns detail even if probes fail,
+	// but we check if the probes actually failed.
+	detail, err := AnalyzeServer("192.0.2.1", 25565, 100*time.Millisecond)
+	if err != nil {
+		t.Fatalf("AnalyzeServer() unexpected error = %v", err)
+	}
+	if detail.VersionName != "" {
+		t.Error("VersionName should be empty on timeout")
 	}
 }
 
